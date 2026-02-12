@@ -16,33 +16,42 @@ class CameraService: NSObject, ObservableObject {
     let movieOutput = AVCaptureMovieFileOutput()
     
     func configure() {
+        print("configure() called")
         // Make changes to the session
         session.beginConfiguration()
-        
+
         // Back camera (normal camera)
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("No back camera found")
             return
         }
-        
+        print("Got camera device")
+
         do {
             let videoInput = try AVCaptureDeviceInput(device: videoDevice)
             if session.canAddInput(videoInput) {
                 session.addInput(videoInput)
+                print("Added video input")
             }
         } catch {
             print("Failed to create video input: \(error)")
             return
         }
-        
+
         // Movie output
         if session.canAddOutput(movieOutput) {
             session.addOutput(movieOutput)
+            print("Added movie output")
         }
-        
+
         // Apply changes to the session
         session.commitConfiguration()
-        session.startRunning()
+        print("Configuration committed, starting session...")
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.session.startRunning()
+            print("Session running: \(self.session.isRunning)")
+        }
     }
     
     func startRecording() {
