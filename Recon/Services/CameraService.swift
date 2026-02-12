@@ -62,7 +62,7 @@ class CameraService: NSObject, ObservableObject {
     }
 }
 
-// Camera API's are written in obj-c
+// Camera API's are written in obj-c, an extension is to separate the functionalities, code cleaner
 @objc extension CameraService: AVCaptureFileOutputRecordingDelegate {
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if let error = error {
