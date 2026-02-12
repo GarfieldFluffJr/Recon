@@ -44,4 +44,31 @@ class CameraService: NSObject, ObservableObject {
         session.commitConfiguration()
         session.startRunning()
     }
+    
+    func startRecording() {
+        // Returns the first element in the array of urls at the documentDirectory
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = "\(Date().timeIntervalSince1970).mov"
+        let fileURL = documentsPath.appendingPathComponent(fileName) // Combine documentsPath and fileName
+        
+        // Start writing video data to this file, and CameraService (self) has the method to call when done recording
+        movieOutput.startRecording(to: fileURL, recordingDelegate: self)
+        isRecording = true
+    }
+    
+    func stopRecording() {
+        movieOutput.stopRecording()
+        isRecording = false
+    }
+}
+
+// Camera API's are written in obj-c
+@objc extension CameraService: AVCaptureFileOutputRecordingDelegate {
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        if let error = error {
+            print("Recording error: \(error)")
+        } else {
+            print("Video saved to: \(outputFileURL)")
+        }
+    }
 }
