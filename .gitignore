@@ -2,4 +2,4 @@
 CLAUDE.md
 .env
 
-*.docx
+~$con logs.docx
