@@ -5,6 +5,8 @@
 //  Created by Louie Yin on 2026-02-12.
 //
 
+// GPS manager
+
 import CoreLocation
 import Combine
 
@@ -15,7 +17,7 @@ class LocationService: NSObject, ObservableObject {
     override init() {
         super.init()
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest // Most accurate location
     }
     
     func requestPermission() {
@@ -31,8 +33,10 @@ class LocationService: NSObject, ObservableObject {
     }
 }
 
+// Since locationManager.delegate = self, it looks for CLLocationManagerDelegate and calls the function inside (locationManager)
 extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        // Most recent location (accurate)
         location = locations.last
     }
 }
