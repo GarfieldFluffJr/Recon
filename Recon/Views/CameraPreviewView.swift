@@ -10,24 +10,28 @@
 import SwiftUI
 import AVFoundation // Audio/Video framework
 
+// Custom UIView that keeps the preview layer sized correctly
+class VideoPreviewView: UIView {
+    override class var layerClass: AnyClass {
+        AVCaptureVideoPreviewLayer.self
+    }
+
+    var previewLayer: AVCaptureVideoPreviewLayer {
+        layer as! AVCaptureVideoPreviewLayer
+    }
+}
+
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
-    
-    // Create a plain UIView, add camera preview layer
-    // UIView is the basic canvas like an empty <div>, and AVCaptureVideoPreviewLayer is like <video> but needs to sit on a UIView
-    func makeUIView(context:Context) -> UIView {
-        let view = UIView()
-        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.videoGravity = .resizeAspectFill // Take up entire screen
-        view.layer.addSublayer(previewLayer)
+
+    // Create the view and connect the session
+    func makeUIView(context: Context) -> VideoPreviewView {
+        let view = VideoPreviewView()
+        view.previewLayer.session = session
+        view.previewLayer.videoGravity = .resizeAspectFill // Take up entire screen
         return view
     }
-    
-    // Every time SwiftUI rerenders, resize preview layer to match the view
-    // Underscore means no external label, only internal (uiView)
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if let layer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-            layer.frame = uiView.bounds
-        }
-    }
+
+    // Nothing to update
+    func updateUIView(_ uiView: VideoPreviewView, context: Context) {}
 }
