@@ -16,8 +16,18 @@ struct RecordingView: View {
         ZStack {
             CameraPreviewView(session: camera.session).ignoresSafeArea()
             VStack {
+                // Recording timer at top
+                if camera.isRecording {
+                    Text(formatTime(camera.recordingTime))
+                        .font(.system(.title2, design: .monospaced))
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.red.opacity(0.7))
+                        .cornerRadius(8)
+                        .padding(.top, 60)
+                }
+
                 Spacer()
-                // Push button to bottom of screen
                 
                 Button {
                     if camera.isRecording {
@@ -37,5 +47,12 @@ struct RecordingView: View {
         .onAppear {
             camera.configure()
         }
+    }
+
+    // Format seconds into MM:SS
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }

@@ -11,7 +11,7 @@
 
 import CoreImage
 
-class VideCompositor {
+class VideoCompositor {
     func compose(backFrame: CIImage, frontFrame: CIImage) -> CIImage {
         let backSize = backFrame.extent.size
         

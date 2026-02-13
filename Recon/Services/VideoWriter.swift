@@ -18,6 +18,7 @@ class VideoWriter {
     private let ciContext = CIContext()
     
     var isWriting = false
+    private var sessionStarted = false
     
     func startWriting(to url: URL, videoSize: CGSize) {
         do {
@@ -68,6 +69,7 @@ class VideoWriter {
         
         assetWriter?.startWriting()
         isWriting = true
+        sessionStarted = false
     }
     
     func writeVideoFrame(_ image: CIImage, at time: CMTime) {
@@ -77,8 +79,9 @@ class VideoWriter {
               videoInput?.isReadyForMoreMediaData == true else { return }
         
         // Start session on first frame
-        if assetWriter?.status == .writing && time == .zero {
+        if !sessionStarted {
             assetWriter?.startSession(atSourceTime: time)
+            sessionStarted = true
         }
         
         // Convert CIImage to pixel buffer
@@ -91,9 +94,9 @@ class VideoWriter {
     }
     
     func writeAudioSample(_ sampleBuffer: CMSampleBuffer) {
-        guard isWriting,
+        guard isWriting, sessionStarted,
               audioInput?.isReadyForMoreMediaData == true else { return }
-        
+
         audioInput?.append(sampleBuffer)
     }
     
