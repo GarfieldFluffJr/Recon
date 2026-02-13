@@ -17,18 +17,22 @@ class VideoCompositor {
     func compose(backFrame: CIImage, frontFrame: CIImage, timestamp: String? = nil) -> CIImage {
         let backSize = backFrame.extent.size
 
-        // Scale front camera to 25%
+        // Scale front camera to 25% and reset origin to (0,0)
         let scale = 0.25
-        let scaledFront = frontFrame.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let scaledFront = frontFrame
+            .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+            .transformed(by: CGAffineTransform(
+                translationX: -frontFrame.extent.origin.x * scale,
+                y: -frontFrame.extent.origin.y * scale
+            ))
 
         // Apply rounded corners to front camera
         let frontSize = scaledFront.extent.size
-        let roundedFront = applyRoundedCorners(to: scaledFront, cornerRadius: 12)
+        let roundedFront = applyRoundedCorners(to: scaledFront, cornerRadius: 8)
 
-        // Position front camera to top-right corner with padding
-        let padding: CGFloat = 16
-        let xOffset = backSize.width - frontSize.width - padding
-        let yOffset = backSize.height - frontSize.height - padding
+        // Position front camera flush in top-right corner
+        let xOffset = backSize.width - frontSize.width + backFrame.extent.origin.x
+        let yOffset = backSize.height - frontSize.height + backFrame.extent.origin.y
         let positionedFront = roundedFront.transformed(by: CGAffineTransform(translationX: xOffset, y: yOffset))
 
         // Composite front on top of back
