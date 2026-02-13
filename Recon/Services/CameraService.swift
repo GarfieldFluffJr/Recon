@@ -11,6 +11,7 @@ import CoreImage
 
 class CameraService: NSObject, ObservableObject {
     @Published var isRecording = false
+    @Published var isReady = false
     @Published var recordingTime: TimeInterval = 0
 
     // Dual camera session (upgraded from AVCaptureSession)
@@ -214,6 +215,11 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             latestBackFrame = ciImage
         } else if output == frontVideoOutput {
             latestFrontFrame = ciImage
+        }
+
+        // Mark ready once both cameras have delivered a frame
+        if !isReady, latestBackFrame != nil, latestFrontFrame != nil {
+            DispatchQueue.main.async { self.isReady = true }
         }
 
         // Composite and write on back camera frames only (drives the frame rate)
