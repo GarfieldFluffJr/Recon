@@ -37,8 +37,15 @@ class CameraService: NSObject, ObservableObject {
     private var timer: Timer?
     private var currentFileURL: URL?
 
-    // 720p
-    private let videoSize = CGSize(width: 1280, height: 720)
+    // 720p portrait
+    private let videoSize = CGSize(width: 720, height: 1280)
+
+    // Timestamp formatter
+    private let timestampFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
 
     func configure() {
         print("configure() called")
@@ -198,9 +205,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             return
         }
 
-        // Extract image from the frame
+        // Extract image from the frame and rotate to portrait
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
 
         // Store frame based on which camera it came from
         if output == backVideoOutput {
@@ -214,12 +221,17 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
            let backFrame = latestBackFrame,
            let frontFrame = latestFrontFrame {
 
-            // Resize back frame to 720p
+            // Resize back frame to 720p portrait
             let scaleX = videoSize.width / backFrame.extent.width
             let scaleY = videoSize.height / backFrame.extent.height
-            let resizedBack = backFrame.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+            let resizedBack = backFrame
+                .transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+                .transformed(by: CGAffineTransform(translationX: -backFrame.extent.origin.x * scaleX, y: -backFrame.extent.origin.y * scaleY))
 
-            let composited = compositor.compose(backFrame: resizedBack, frontFrame: frontFrame)
+            // Generate current time string for video overlay
+            let timeString = timestampFormatter.string(from: Date())
+
+            let composited = compositor.compose(backFrame: resizedBack, frontFrame: frontFrame, timestamp: timeString)
 
             // Use absolute timestamp (audio uses absolute too, so they must match)
             let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
