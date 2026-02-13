@@ -34,11 +34,12 @@ class VideoCompositor {
         // Composite front on top of back
         var result = positionedFront.composited(over: backFrame)
 
-        // Burn timestamp into bottom-left of video
+        // Burn timestamp inside the video, bottom-left corner
         if let timestamp = timestamp {
             let timestampImage = renderTimestamp(timestamp)
-            // Position at bottom-left with padding
-            let positioned = timestampImage.transformed(by: CGAffineTransform(translationX: 16, y: 16))
+            let xPos = backFrame.extent.origin.x + 12
+            let yPos = backFrame.extent.origin.y + 12
+            let positioned = timestampImage.transformed(by: CGAffineTransform(translationX: xPos, y: yPos))
             result = positioned.composited(over: result)
         }
 
@@ -69,26 +70,22 @@ class VideoCompositor {
 
     // Render timestamp text as a CIImage
     private func renderTimestamp(_ text: String) -> CIImage {
-        let fontSize: CGFloat = 16
-        let padding: CGFloat = 8
+        let fontSize: CGFloat = 8
+        let displayText = "[\(text)]"
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .medium),
-            .foregroundColor: UIColor.white
+            .foregroundColor: UIColor.orange
         ]
 
-        let textSize = (text as NSString).size(withAttributes: attributes)
-        let bgSize = CGSize(width: textSize.width + padding * 2, height: textSize.height + padding * 2)
+        let textSize = (displayText as NSString).size(withAttributes: attributes)
+        let padding: CGFloat = 2
+        let canvasSize = CGSize(width: textSize.width + padding * 2, height: textSize.height + padding * 2)
 
-        let renderer = UIGraphicsImageRenderer(size: bgSize)
+        let renderer = UIGraphicsImageRenderer(size: canvasSize)
         let image = renderer.image { _ in
-            // Semi-transparent black background
-            UIColor.black.withAlphaComponent(0.5).setFill()
-            UIBezierPath(roundedRect: CGRect(origin: .zero, size: bgSize), cornerRadius: 6).fill()
-
-            // Draw text
             let textRect = CGRect(x: padding, y: padding, width: textSize.width, height: textSize.height)
-            (text as NSString).draw(in: textRect, withAttributes: attributes)
+            (displayText as NSString).draw(in: textRect, withAttributes: attributes)
         }
 
         return CIImage(image: image) ?? CIImage()
