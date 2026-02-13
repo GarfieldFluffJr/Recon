@@ -36,11 +36,22 @@ struct RecordingView: View {
                         camera.startRecording()
                     }
                 } label: {
-                    Circle()
-                        .fill(camera.isRecording ? Color.red : Color.white)
-                        .frame(width: 70, height: 70)
-                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                        .opacity(camera.isReady ? 1.0 : 0.3)
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white, lineWidth: 3)
+                            .frame(width: 70, height: 70)
+
+                        if camera.isRecording {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.red)
+                                .frame(width: 28, height: 28)
+                        } else {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 58, height: 58)
+                        }
+                    }
+                    .opacity(camera.isReady ? 1.0 : 0.3)
                 }
                 .disabled(!camera.isReady)
                 .padding(.bottom, 40)
