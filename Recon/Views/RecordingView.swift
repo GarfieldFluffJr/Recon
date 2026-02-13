@@ -40,7 +40,9 @@ struct RecordingView: View {
                         .fill(camera.isRecording ? Color.red : Color.white)
                         .frame(width: 70, height: 70)
                         .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                        .opacity(camera.isReady ? 1.0 : 0.3)
                 }
+                .disabled(!camera.isReady)
                 .padding(.bottom, 40)
             }
         }
