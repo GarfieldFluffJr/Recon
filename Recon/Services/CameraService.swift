@@ -49,9 +49,36 @@ class CameraService: NSObject, ObservableObject {
         return f
     }()
 
+    // Request permissions one at a time, then set up the camera
     func configure() {
         print("configure() called")
 
+        // 1. Camera permission
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            print("Camera permission: \(granted)")
+
+            // 2. Microphone permission
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                print("Microphone permission: \(granted)")
+
+                // 3. Location permission
+                DispatchQueue.main.async {
+                    self.locationService.requestPermission()
+                }
+
+                // 4. Speech recognition permission (slight delay so location popup shows first)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.transcriptionService.requestPermission()
+                }
+
+                // 5. Set up the camera session
+                self.setupSession()
+            }
+        }
+    }
+
+    // All the camera pipeline setup, called after permissions are granted
+    private func setupSession() {
         guard AVCaptureMultiCamSession.isMultiCamSupported else {
             print("MultiCam not supported on this device")
             return
@@ -155,11 +182,7 @@ class CameraService: NSObject, ObservableObject {
         print("Configuration committed, starting session...")
 
         // Start GPS
-        locationService.requestPermission()
         locationService.startUpdating()
-
-        // Request speech recognition permission
-        transcriptionService.requestPermission()
 
         DispatchQueue.global(qos: .userInitiated).async {
             self.session.startRunning()
