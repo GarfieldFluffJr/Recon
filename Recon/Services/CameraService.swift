@@ -21,6 +21,7 @@ class CameraService: NSObject, ObservableObject {
     private let compositor = VideoCompositor()
     private let videoWriter = VideoWriter()
     let locationService = LocationService()
+    let transcriptionService = TranscriptionService()
 
     // Raw frame outputs (one per camera + one for audio)
     private let backVideoOutput = AVCaptureVideoDataOutput()
@@ -157,6 +158,9 @@ class CameraService: NSObject, ObservableObject {
         locationService.requestPermission()
         locationService.startUpdating()
 
+        // Request speech recognition permission
+        transcriptionService.requestPermission()
+
         DispatchQueue.global(qos: .userInitiated).async {
             self.session.startRunning()
             print("Session running: \(self.session.isRunning)")
@@ -170,6 +174,7 @@ class CameraService: NSObject, ObservableObject {
         currentFileURL = fileURL
 
         videoWriter.startWriting(to: fileURL, videoSize: videoSize)
+        transcriptionService.startTranscribing()
 
         DispatchQueue.main.async {
             self.isRecording = true
@@ -187,6 +192,9 @@ class CameraService: NSObject, ObservableObject {
             self.timer = nil
         }
 
+        let transcript = transcriptionService.stopTranscribing()
+        print("Transcript: \(transcript)")
+
         videoWriter.stopWriting { url in
             if let url = url {
                 print("Video saved to: \(url)")
@@ -198,10 +206,13 @@ class CameraService: NSObject, ObservableObject {
 // Receives raw frames from both cameras and audio from mic
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // Audio — write directly, no processing needed
+        // Audio — write to video file and feed to speech recognizer
         if output == audioOutput {
             if videoWriter.isWriting {
                 videoWriter.writeAudioSample(sampleBuffer)
+            }
+            if isRecording {
+                transcriptionService.appendAudioBuffer(sampleBuffer)
             }
             return
         }
