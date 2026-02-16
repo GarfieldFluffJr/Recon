@@ -13,11 +13,22 @@ def lambda_handler(event, context):
   path = event.get("rawPath", "")
   
   if "/upload-url" in path:
-    return get_upload_url()
+    return get_upload_url() # Generate presigned upload URL
   elif "/analyze" in path:
-    body = json.loads(event.get("body", "{}"))
-    return analyze(body)
+    body = json.loads(event.get("body", "{}")) # Parse the JSON body
+    return analyze(body) # Run Nova Lite analysis
   else:
     return make_response(404, {"error", "Not found"})
+
+# Format the return value so API Gateway understands
+def make_response(status_code, body):
+  return {
+    "statusCode": status_code,
+    "headers": {
+      "Content-Type": "application/json",
+      "Access=Control-Allow_Origin": "*"
+    },
+    "body": json.dumps(body)
+  }
   
   
