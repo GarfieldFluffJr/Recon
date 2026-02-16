@@ -13,7 +13,8 @@ import Combine
 class TranscriptionService: ObservableObject {
     @Published var liveTranscript = ""
     
-    private var recognizer: SFSpeechRecognizer?
+    // Pre-created so startTranscribing() is fast
+    private let recognizer = SFSpeechRecognizer()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask? // Gives results as speech is decteced - active recognition
     
@@ -32,16 +33,16 @@ class TranscriptionService: ObservableObject {
     }
     
     func startTranscribing() {
-        recognizer = SFSpeechRecognizer()
         guard let recognizer = recognizer, recognizer.isAvailable else {
             print("Speech recognizer not available")
             return
         }
-        
+
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         recognitionRequest?.requiresOnDeviceRecognition = true // Force on-device transcription
         recognitionRequest?.shouldReportPartialResults = true // Get results as words are spoken, not when finished
-        
+        recognitionRequest?.addsPunctuation = true // Auto-add punctuation
+
         startRecognitionTask() // Start listening for speech
         startRestartTimer() // Start the 50s restart cycle
     }
@@ -101,26 +102,28 @@ class TranscriptionService: ObservableObject {
         // Kill restart timer
         restartTimer?.invalidate()
         restartTimer = nil
-        
+
         // Stop recognition task
         recognitionTask?.cancel()
         recognitionTask = nil
-        
+
         // Tell request no more audio incoming
         recognitionRequest?.endAudio()
         recognitionRequest = nil
-        
+
+        // Capture live transcript before clearing
+        let currentLive = liveTranscript
+
         // Append new transcript to the existing one
-        let finalTranscript = completedText + " " + (liveTranscript.isEmpty ? "" : liveTranscript)
-        
+        let finalTranscript = completedText + (currentLive.isEmpty ? "" : " " + currentLive)
+
+        // Reset everything for next recording
+        completedText = ""
         DispatchQueue.main.async {
             self.liveTranscript = ""
         }
-        
-        // Reset for next recording
-        let result = finalTranscript.trimmingCharacters(in: .whitespaces)
-        completedText = ""
-        return result
+
+        return finalTranscript.trimmingCharacters(in: .whitespaces)
     }
     
     // Start a recognition task - Apple calls the closure every time it detects new words (closure is callback)
@@ -143,7 +146,8 @@ class TranscriptionService: ObservableObject {
                 }
             }
             
-            if let error = error {
+            if let error = error as? NSError, error.code != 1110 {
+                // 1110 = "No speech detected" — harmless, ignore it
                 print("Recognition error: \(error)")
             }
         }

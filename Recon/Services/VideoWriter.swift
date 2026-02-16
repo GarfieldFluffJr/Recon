@@ -21,6 +21,14 @@ class VideoWriter {
     private var sessionStarted = false
     
     func startWriting(to url: URL, videoSize: CGSize) {
+        // Reset everything from previous recording
+        assetWriter = nil
+        videoInput = nil
+        audioInput = nil
+        pixelBufferAdaptor = nil
+        sessionStarted = false
+        isWriting = false
+
         do {
             assetWriter = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -95,6 +103,7 @@ class VideoWriter {
     
     func writeAudioSample(_ sampleBuffer: CMSampleBuffer) {
         guard isWriting, sessionStarted,
+              assetWriter?.status == .writing,
               audioInput?.isReadyForMoreMediaData == true else { return }
 
         audioInput?.append(sampleBuffer)

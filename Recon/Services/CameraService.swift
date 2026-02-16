@@ -197,10 +197,10 @@ class CameraService: NSObject, ObservableObject {
         currentFileURL = fileURL
 
         videoWriter.startWriting(to: fileURL, videoSize: videoSize)
-        transcriptionService.startTranscribing()
 
         DispatchQueue.main.async {
             self.isRecording = true
+            self.transcriptionService.startTranscribing()
             self.recordingTime = 0
             self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                 self.recordingTime += 1
