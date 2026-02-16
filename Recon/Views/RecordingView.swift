@@ -28,7 +28,19 @@ struct RecordingView: View {
                 }
 
                 Spacer()
-                
+
+                // Live transcript overlay
+                if camera.isRecording && !camera.transcriptionService.liveTranscript.isEmpty {
+                    Text(camera.transcriptionService.liveTranscript)
+                        .font(.system(.body))
+                        .foregroundColor(.white)
+                        .padding(10)
+                        .background(Color.black.opacity(0.5))
+                        .cornerRadius(8)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
+                }
+
                 Button {
                     if camera.isRecording {
                         camera.stopRecording()
