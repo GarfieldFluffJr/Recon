@@ -18,7 +18,9 @@ def lambda_handler(event, context):
     body = json.loads(event.get("body", "{}")) # Parse the JSON body
     return analyze(body) # Run Nova Lite analysis
   else:
-    return make_response(404, {"error", "Not found"})
+    return make_response(404, {
+      "error", "Not found"
+    })
 
 # Format the return value so API Gateway understands
 def make_response(status_code, body):
@@ -30,5 +32,22 @@ def make_response(status_code, body):
     },
     "body": json.dumps(body)
   }
+
+def get_upload_url():
+  video_key = f"videos/{uuid.uuid4()}.mov",
+  upload_url = s3.generate_presigned_url(
+    "put_object",
+    Params={
+      "Bucket": BUCKET,
+      "Key": video_key,
+      "ContentType": "video/quicktime"
+    },
+    ExpiresIn=300
+  )
+  
+  return make_response(200, {
+    "uploadUrl": upload_url,
+    "videoKey": video_key
+  })
   
   
