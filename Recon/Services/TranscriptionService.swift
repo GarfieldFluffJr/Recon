@@ -10,7 +10,7 @@
 import Speech
 import Combine
 
-class TransceriptService: ObservableObject {
+class TranscriptionService: ObservableObject {
     @Published var liveTranscript = ""
     
     private var recognizer: SFSpeechRecognizer?
