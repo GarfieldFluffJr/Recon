@@ -62,7 +62,7 @@ def analyze(body):
       "error": "videoKey is required"
     })
   
-  # TODO: Nove Sonic transcription
+  # TODO: Nova Sonic transcription
   transcript = apple_transcript # Use apple for now, integrate sonic later
   
   s3_uri = f"s3://{BUCKET}/{video_key}"
@@ -112,3 +112,67 @@ def analyze(body):
       "error": str(e)
     })
   
+def build_analysis_prompt(transcript, gps, duration):
+  latitude = gps.get("latitude", "Unknown")
+  longitude = gps.get("longitude", "Unknown")
+  
+  return f"""
+    You are an emergency incident video analyzer assisting 911 dispatch and first responders.
+
+    Analyze the provided video carefully. This report will be viewed by emergency personnel and must prioritize factual, observable, responder-relevant information.
+
+    VIDEO METADATA:
+    - Duration: {duration} seconds
+    - GPS Coordinates (device reported): {latitude}, {longitude}
+    - Visible on-screen timestamp may be present in the video.
+
+    SPEECH TRANSCRIPT:
+    \"\"\"
+    {transcript}
+    \"\"\"
+
+    CRITICAL INSTRUCTIONS:
+    - Only report information that is clearly visible or audible.
+    - Do NOT guess or assume details that are not supported by evidence.
+    - If something is unclear, state that it is unclear.
+    - Extract timestamps from the burned-in video time when visible.
+    - Prioritize responder-useful details (hazards, injuries, weapons, fire spread, traffic flow, etc.).
+    - Identify environmental clues (street signs, business names, intersections, landmarks).
+    - Highlight escalation indicators (smoke thickening, physical violence, worsening condition).
+
+    Respond with ONLY a valid JSON object (no extra text) using EXACTLY this structure:
+
+    {
+      "incidentType": "Fire | Vehicle Accident | Medical Emergency | Hazard | Altercation | Suspicious Activity | Infrastructure Damage | Other",
+      "severity": "Low | Medium | High | Critical",
+      "confidenceLevel": "Low | Medium | High",
+      "locationDetails": {
+        "visibleStreetNames": ["street name if visible"],
+        "visibleBusinessNames": ["business/store names if visible"],
+        "landmarks": ["nearby landmark"],
+        "intersectionDescription": "description if identifiable"
+      },
+      "timeline": [
+        {
+          "timestamp": "HH:MM:SS if visible",
+          "event": "description of key event"
+        }
+      ],
+      "peopleInvolved": {
+        "approximateCount": "number or unknown",
+        "visibleInjuries": ["injury observations"],
+        "descriptions": ["clothing, distinguishing features if relevant"]
+      },
+      "hazardsObserved": [
+        "fire, smoke, weapon, leaking fluid, downed power line, aggressive behavior, blocked roadway, etc."
+      ],
+      "transcriptHighlights": [
+        "important spoken phrase 1",
+        "important spoken phrase 2"
+      ],
+      "description": "2-4 sentence clear, factual summary prioritizing responder awareness.",
+      "recommendedActions": [
+        "specific action for dispatch or responders"
+      ]
+    }
+  """
