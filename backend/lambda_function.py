@@ -176,3 +176,38 @@ def build_analysis_prompt(transcript, gps, duration):
       ]
     }}
   """
+
+# Clean Nova's response
+def parse_nova_response(text):
+  cleaned = text.strip()
+  
+  # Remove markdown code block if present
+  if cleaned.startswith("```"):
+    cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    
+  try:
+    return json.loads(cleaned)
+  except json.JSONDecodeError:
+    # If parsing fails, wrap raw text in a basic structure
+    return {
+      "parseError": True,
+      "incidentType": "Unknown",
+      "severity": "Unknown",
+      "confidenceLevel": "Low",
+      "locationDetails": {
+        "visibleStreetNames": [],
+        "visibleBusinessNames": [],
+        "landmarks": [],
+        "intersectionDescription": "Unknown"
+      },
+      "timeline": [],
+      "peopleInvolved": {
+        "approximateCount": "Unknown",
+        "visibleInjuries": [],
+        "descriptions": []
+      },
+      "hazardsObserved": [],
+      "transcriptHighlights": [],
+      "description": cleaned,
+      "recommendedActions": []
+    }
