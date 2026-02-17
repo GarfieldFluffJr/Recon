@@ -127,9 +127,9 @@ def build_analysis_prompt(transcript, gps, duration):
     - Visible on-screen timestamp may be present in the video.
 
     SPEECH TRANSCRIPT:
-    \"\"\"
+    ---
     {transcript}
-    \"\"\"
+    ---
 
     CRITICAL INSTRUCTIONS:
     - Only report information that is clearly visible or audible.
@@ -142,27 +142,27 @@ def build_analysis_prompt(transcript, gps, duration):
 
     Respond with ONLY a valid JSON object (no extra text) using EXACTLY this structure:
 
-    {
+    {{
       "incidentType": "Fire | Vehicle Accident | Medical Emergency | Hazard | Altercation | Suspicious Activity | Infrastructure Damage | Other",
       "severity": "Low | Medium | High | Critical",
       "confidenceLevel": "Low | Medium | High",
-      "locationDetails": {
+      "locationDetails": {{
         "visibleStreetNames": ["street name if visible"],
         "visibleBusinessNames": ["business/store names if visible"],
         "landmarks": ["nearby landmark"],
         "intersectionDescription": "description if identifiable"
-      },
+      }},
       "timeline": [
-        {
+        {{
           "timestamp": "HH:MM:SS if visible",
           "event": "description of key event"
-        }
+        }}
       ],
-      "peopleInvolved": {
+      "peopleInvolved": {{
         "approximateCount": "number or unknown",
         "visibleInjuries": ["injury observations"],
         "descriptions": ["clothing, distinguishing features if relevant"]
-      },
+      }},
       "hazardsObserved": [
         "fire, smoke, weapon, leaking fluid, downed power line, aggressive behavior, blocked roadway, etc."
       ],
@@ -174,5 +174,5 @@ def build_analysis_prompt(transcript, gps, duration):
       "recommendedActions": [
         "specific action for dispatch or responders"
       ]
-    }
+    }}
   """
