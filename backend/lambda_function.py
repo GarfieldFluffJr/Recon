@@ -1,10 +1,11 @@
 import json
 import boto3
+from botocore.config import Config
 import os 
 import uuid 
 from datetime import datetime, timezone
 
-s3 = boto3.client("s3")
+s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 BUCKET = os.environ.get("S3_BUCKET")
