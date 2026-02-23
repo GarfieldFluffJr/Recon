@@ -69,21 +69,10 @@ def analyze(body):
   tmp_path = f"/tmp/{uuid.uuid4()}.mov"
   s3.download_file(BUCKET, video_key, tmp_path)
 
-  # Step 1: Try Nova 2 Sonic transcription, fall back to Apple
+  # Use Apple's on-device transcript
   transcript = apple_transcript
-  transcript_source = "apple"
-  try:
-    sonic_transcript = transcribe_with_sonic(tmp_path)
-    if sonic_transcript:
-      transcript = sonic_transcript
-      transcript_source = "sonic"
-      print("Using Nova Sonic transcript")
-    else:
-      print("Sonic returned empty, using Apple transcript")
-  except Exception as e:
-    print(f"Sonic transcription failed, using Apple transcript: {e}")
 
-  # Step 2: Base64 encode the video for Nova 2 Lite
+  # Base64 encode the video for Nova 2 Lite
   with open(tmp_path, "rb") as f:
     video_data = base64.b64encode(f.read()).decode()
 
@@ -115,7 +104,7 @@ def analyze(body):
     report["videoKey"] = video_key
     report["timestamp"] = datetime.now(timezone.utc).isoformat()
     report["duration"] = duration
-    report["transcriptSource"] = transcript_source
+    report["transcriptSource"] = "apple"
 
     return make_response(200, report)
 
@@ -123,15 +112,6 @@ def analyze(body):
     print(f"Error analyzing video: {e}")
     return make_response(500, {"error": str(e)})
 
-# Transcribe audio from video using Nova 2 Sonic
-# Takes a local file path (already downloaded from S3)
-def transcribe_with_sonic(file_path):
-  with open(file_path, "rb") as audio_file:
-    transcript = nova_client.audio.transcriptions.create(
-      model="nova-2-sonic-v1",
-      file=audio_file
-    )
-  return transcript.text
   
 def build_analysis_prompt(transcript, gps, duration):
   latitude = gps.get("latitude", "Unknown")
