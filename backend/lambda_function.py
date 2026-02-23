@@ -153,13 +153,17 @@ def build_analysis_prompt(transcript, gps, duration):
     ---
 
     CRITICAL INSTRUCTIONS:
+    - The video uses a picture-in-picture layout: the main (larger) view is the rear-facing camera, and the small overlay in the corner is the front-facing camera showing the person recording. This is the normal recording format — do NOT comment on the split-screen or PiP layout itself.
     - Only report information that is clearly visible or audible.
     - Do NOT guess or assume details that are not supported by evidence.
     - If something is unclear, state that it is unclear.
-    - Extract timestamps from the burned-in video time when visible.
+    - Extract timestamps from the burned-in video time overlay when visible.
     - Prioritize responder-useful details (hazards, injuries, weapons, fire spread, traffic flow, etc.).
     - Identify environmental clues (street signs, business names, intersections, landmarks).
     - Highlight escalation indicators (smoke thickening, physical violence, worsening condition).
+    - Provide a thorough, detailed description (4-6 sentences minimum) covering the scene, environment, weather, lighting, and any notable details.
+    - For the timeline, include an entry for every significant moment or change you observe in the video, referencing the burned-in timestamp if visible.
+    - List ALL people visible, their approximate locations, actions, and any identifying features.
 
     Respond with ONLY a valid JSON object (no extra text) using EXACTLY this structure:
 
@@ -191,7 +195,7 @@ def build_analysis_prompt(transcript, gps, duration):
         "important spoken phrase 1",
         "important spoken phrase 2"
       ],
-      "description": "2-4 sentence clear, factual summary prioritizing responder awareness.",
+      "description": "4-6 sentence detailed, factual summary covering the scene, environment, people, actions, and any hazards. Prioritize responder awareness.",
       "recommendedActions": [
         "specific action for dispatch or responders"
       ]
