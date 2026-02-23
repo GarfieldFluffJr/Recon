@@ -5,15 +5,20 @@ import os
 import uuid 
 from datetime import datetime, timezone
 
-s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
+s3 = boto3.client("s3", region_name="us-east-1", endpoint_url="https://s3.us-east-1.amazonaws.com", config=Config(signature_version="s3v4"))   
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 BUCKET = os.environ.get("S3_BUCKET")
 
 def lambda_handler(event, context):
   path = event.get("rawPath", "")
-  
-  if "/upload-url" in path:
+  if "/test-s3" in path:
+      try:
+          s3.put_object(Bucket=BUCKET, Key="test.txt", Body=b"hello")
+          return make_response(200, {"message": "S3 write works"})
+      except Exception as e:
+          return make_response(500, {"error": str(e)})
+  elif "/upload-url" in path:
     return get_upload_url() # Generate presigned upload URL
   elif "/analyze" in path:
     body = json.loads(event.get("body", "{}")) # Parse the JSON body
@@ -72,7 +77,7 @@ def analyze(body):
   
   try:
     nova_response = bedrock.converse(
-      modelId="amazon.nova-2-lite-v1:0",
+      modelId="arn:aws:bedrock:us-east-1:288842392681:inference-profile/us.amazon.nova-2-lite-v1:0",
       messages=[
         {
           "role": "user",
