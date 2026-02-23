@@ -1,24 +1,22 @@
 import json
 import boto3
 from botocore.config import Config
+from openai import OpenAI
 import os 
 import uuid 
 from datetime import datetime, timezone
 
 s3 = boto3.client("s3", region_name="us-east-1", endpoint_url="https://s3.us-east-1.amazonaws.com", config=Config(signature_version="s3v4"))   
-bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+nova_client = OpenAI(
+  api_key=os.environ.get("NOVA_API_KEY"),
+  base_url="https://api.nova.amazon.com/v1"
+)
 
 BUCKET = os.environ.get("S3_BUCKET")
 
 def lambda_handler(event, context):
   path = event.get("rawPath", "")
-  if "/test-s3" in path:
-      try:
-          s3.put_object(Bucket=BUCKET, Key="test.txt", Body=b"hello")
-          return make_response(200, {"message": "S3 write works"})
-      except Exception as e:
-          return make_response(500, {"error": str(e)})
-  elif "/upload-url" in path:
+  if "/upload-url" in path:
     return get_upload_url() # Generate presigned upload URL
   elif "/analyze" in path:
     body = json.loads(event.get("body", "{}")) # Parse the JSON body
@@ -56,67 +54,84 @@ def get_upload_url():
     "videoKey": video_key
   })
 
-# Receive data from iOS app and calls Nova Lite
+# Receive data from iOS app, transcribe with Sonic, analyze with Nova 2 Lite
 def analyze(body):
   video_key = body.get("videoKey", "") # after calling get_upload_url for temporary s3 upload url
-  apple_transcript = body.get("transcript", "")
+  apple_transcript = body.get("transcript", "") # fallback
   gps = body.get("gps", {})
   duration = body.get("duration", 0)
-  
+
   if not video_key:
-    return make_response(400, {
-      "error": "videoKey is required"
-    })
-  
-  # TODO: Nova Sonic transcription
-  transcript = apple_transcript # Use apple for now, integrate sonic later
-  
-  s3_uri = f"s3://{BUCKET}/{video_key}"
-  
-  prompt = build_analysis_prompt(transcript, gps, duration)
-  
+    return make_response(400, {"error": "videoKey is required"})
+
+  # Download video from S3 to /tmp for base64 encoding
+  import base64
+  tmp_path = f"/tmp/{uuid.uuid4()}.mov"
+  s3.download_file(BUCKET, video_key, tmp_path)
+
+  # Step 1: Try Nova 2 Sonic transcription, fall back to Apple
+  transcript = apple_transcript
+  transcript_source = "apple"
   try:
-    nova_response = bedrock.converse(
-      modelId="arn:aws:bedrock:us-east-1:288842392681:inference-profile/us.amazon.nova-2-lite-v1:0",
+    sonic_transcript = transcribe_with_sonic(tmp_path)
+    if sonic_transcript:
+      transcript = sonic_transcript
+      transcript_source = "sonic"
+      print("Using Nova Sonic transcript")
+    else:
+      print("Sonic returned empty, using Apple transcript")
+  except Exception as e:
+    print(f"Sonic transcription failed, using Apple transcript: {e}")
+
+  # Step 2: Base64 encode the video for Nova 2 Lite
+  with open(tmp_path, "rb") as f:
+    video_data = base64.b64encode(f.read()).decode()
+
+  # Clean up temp file
+  os.remove(tmp_path)
+
+  # Step 3: Analyze video with Nova 2 Lite
+  prompt = build_analysis_prompt(transcript, gps, duration)
+
+  try:
+    nova_response = nova_client.chat.completions.create(
+      model="nova-2-lite-v1",
       messages=[
         {
           "role": "user",
           "content": [
-            {
-              "video": {
-                "format": "mov",
-                "source": {
-                  "s3Location": {
-                    "uri": s3_uri,
-                    "bucketOwner": os.environ.get("AWS_ACCOUNT_ID", "")
-                  }
-                }
-              }
-            },
-            {
-              "text": prompt
-            }
+            {"type": "text", "text": prompt},
+            {"type": "file", "file": {"file_data": video_data}}
           ]
         }
       ]
     )
-    
-    result_text = nova_response["output"]["message"]["content"][0]["text"]
+
+    result_text = nova_response.choices[0].message.content
     report = parse_nova_response(result_text)
-    
+
     # Add metadata
     report["location"] = gps
     report["videoKey"] = video_key
     report["timestamp"] = datetime.now(timezone.utc).isoformat()
     report["duration"] = duration
-    
+    report["transcriptSource"] = transcript_source
+
     return make_response(200, report)
-  
+
   except Exception as e:
     print(f"Error analyzing video: {e}")
-    return make_response(500, {
-      "error": str(e)
-    })
+    return make_response(500, {"error": str(e)})
+
+# Transcribe audio from video using Nova 2 Sonic
+# Takes a local file path (already downloaded from S3)
+def transcribe_with_sonic(file_path):
+  with open(file_path, "rb") as audio_file:
+    transcript = nova_client.audio.transcriptions.create(
+      model="nova-2-sonic-v1",
+      file=audio_file
+    )
+  return transcript.text
   
 def build_analysis_prompt(transcript, gps, duration):
   latitude = gps.get("latitude", "Unknown")
