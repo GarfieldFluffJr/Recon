@@ -11,7 +11,9 @@ import SwiftUI
 import AVKit
 
 struct ReportDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     let report: IncidentReport
+    var onDelete: (() -> Void)? = nil
 
     var body: some View {
         ScrollView {
@@ -158,6 +160,19 @@ struct ReportDetailView: View {
             .padding()
         }
         .navigationTitle("Incident Report")
+        .toolbar {
+            if let onDelete = onDelete {
+                ToolbarItem(placement: .destructiveAction) {
+                    Button(role: .destructive) {
+                        onDelete()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+        }
     }
 
     // Severity badge color

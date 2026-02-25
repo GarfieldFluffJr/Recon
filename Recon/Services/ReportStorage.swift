@@ -15,14 +15,14 @@ class ReportStorageService {
     private var reportsDirectory: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dir = docs.appendingPathComponent("reports")
-        
+
         // Create folder if it doesn't exist
         if !FileManager.default.fileExists(atPath: dir.path) {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         return dir
     }
-    
+
     // Save a report as JSON file
     func save(report: IncidentReport) {
         let fileURL = reportsDirectory.appendingPathComponent("\(report.id.uuidString).json")
@@ -34,21 +34,24 @@ class ReportStorageService {
             print("Failed to save report: \(error)")
         }
     }
-    
+
     // Load all saved reports
     func loadAll() -> [IncidentReport] {
         do {
             let files = try FileManager.default.contentsOfDirectory(at: reportsDirectory, includingPropertiesForKeys: nil)
             let jsonFiles = files.filter {
-                // $0 is first argument in closure (first parameter)
                 $0.pathExtension == "json"
             }
-            
-            // compact map is map but skips any fails
+
             let reports = jsonFiles.compactMap { fileURL -> IncidentReport? in
                 guard let data = try? Data(contentsOf: fileURL),
-                      let report = try? JSONDecoder().decode(IncidentReport.self, from: data) else {
+                      var report = try? JSONDecoder().decode(IncidentReport.self, from: data) else {
                     return nil
+                }
+                // Extract the UUID from the file name so delete can find it
+                let fileName = fileURL.deletingPathExtension().lastPathComponent
+                if let fileID = UUID(uuidString: fileName) {
+                    report.id = fileID
                 }
                 return report
             }
@@ -62,10 +65,15 @@ class ReportStorageService {
             return []
         }
     }
-    
+
     // Delete a report
     func delete(report: IncidentReport) {
         let fileURL = reportsDirectory.appendingPathComponent("\(report.id.uuidString).json")
-        try? FileManager.default.removeItem(at: fileURL)
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+            print("Deleted report: \(fileURL)")
+        } catch {
+            print("Failed to delete report: \(error)")
+        }
     }
 }

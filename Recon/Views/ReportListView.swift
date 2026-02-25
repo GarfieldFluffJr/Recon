@@ -33,7 +33,10 @@ struct ReportListView: View {
                 } else {
                     List {
                         ForEach(reports) { report in
-                            NavigationLink(destination: ReportDetailView(report: report)) {
+                            NavigationLink(destination: ReportDetailView(report: report, onDelete: {
+                                storageService.delete(report: report)
+                                reports.removeAll { $0.id == report.id }
+                            })) {
                                 reportRow(report)
                             }
                         }

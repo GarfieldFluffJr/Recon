@@ -44,8 +44,8 @@ class AnalysisViewModel: ObservableObject {
                 
                 // Analyze with Nova 2 Lite
                 var report = try await apiService.analyzeVideo(videoKey: videoKey, transcript: transcript, latitude: latitude, longitude: longitude, duration: duration)
-                // Attach local video URL so user can replay with the report, instead of Nova returning the video too
-                report.localVideoURL = videoURL
+                // Attach local video file name so user can replay with the report
+                report.localVideoFileName = videoURL.lastPathComponent
                 
                 // Save report locally
                 storageService.save(report: report)
