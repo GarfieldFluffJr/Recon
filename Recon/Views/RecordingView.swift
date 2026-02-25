@@ -54,14 +54,16 @@ struct RecordingView: View {
                             let longitude = location?.coordinate.longitude ?? 0
                             let duration = camera.recordingTime
 
-                            showAnalysis = true
-                            analysisVM.analyze(
-                                videoURL: videoURL,
-                                transcript: transcript,
-                                latitude: latitude,
-                                longitude: longitude,
-                                duration: duration
-                            )
+                            DispatchQueue.main.async {
+                                showAnalysis = true
+                                analysisVM.analyze(
+                                    videoURL: videoURL,
+                                    transcript: transcript,
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                    duration: duration
+                                )
+                            }
                         }
                     } else {
                         camera.startRecording()
