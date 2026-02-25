@@ -5,7 +5,7 @@
 //  Created by Louie Yin on 2026-02-24.
 //
 
-// Controller that initiates analysis pipeline
+// Controller that initiates analysis pipeline + loading screen message
 
 import Foundation
 import Combine
