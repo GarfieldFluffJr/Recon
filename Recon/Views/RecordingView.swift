@@ -11,7 +11,9 @@ import SwiftUI
 
 struct RecordingView: View {
     @StateObject var camera = CameraService()
-    
+    @StateObject var analysisVM = AnalysisViewModel()
+    @State private var showAnalysis = false
+
     var body: some View {
         ZStack {
             CameraPreviewView(session: camera.session).ignoresSafeArea()
@@ -43,7 +45,23 @@ struct RecordingView: View {
 
                 Button {
                     if camera.isRecording {
-                        camera.stopRecording()
+                        camera.stopRecording { videoURL, transcript in
+                            guard let videoURL = videoURL else { return }
+
+                            let location = camera.locationService.location
+                            let latitude = location?.coordinate.latitude ?? 0
+                            let longitude = location?.coordinate.longitude ?? 0
+                            let duration = camera.recordingTime
+
+                            showAnalysis = true
+                            analysisVM.analyze(
+                                videoURL: videoURL,
+                                transcript: transcript,
+                                latitude: latitude,
+                                longitude: longitude,
+                                duration: duration
+                            )
+                        }
                     } else {
                         camera.startRecording()
                     }
@@ -67,6 +85,13 @@ struct RecordingView: View {
                 }
                 .disabled(!camera.isReady)
                 .padding(.bottom, 40)
+            }
+
+            // Analysis progress overlay
+            if showAnalysis {
+                AnalysisProgressView(viewModel: analysisVM, onDismiss: {
+                    showAnalysis = false
+                })
             }
         }
         .onAppear {
