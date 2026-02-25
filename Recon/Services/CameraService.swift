@@ -208,7 +208,7 @@ class CameraService: NSObject, ObservableObject {
         }
     }
 
-    func stopRecording() {
+    func stopRecording(completion: @escaping (URL?, String) -> Void) {
         DispatchQueue.main.async {
             self.isRecording = false
             self.timer?.invalidate()
@@ -222,6 +222,7 @@ class CameraService: NSObject, ObservableObject {
             if let url = url {
                 print("Video saved to: \(url)")
             }
+            completion(url, transcript)
         }
     }
 }

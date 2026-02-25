@@ -9,10 +9,16 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        RecordingView()
-    }
-}
+        TabView {
+            RecordingView()
+                .tabItem {
+                    Label("Record", systemImage: "video.fill")
+                }
 
-#Preview {
-    ContentView()
+            ReportListView()
+                .tabItem {
+                    Label("Reports", systemImage: "doc.text.fill")
+                }
+        }
+    }
 }
