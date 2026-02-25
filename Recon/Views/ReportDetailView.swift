@@ -14,6 +14,7 @@ struct ReportDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let report: IncidentReport
     var onDelete: (() -> Void)? = nil
+    @State private var showFullScreenVideo = false
 
     var body: some View {
         ScrollView {
@@ -48,11 +49,28 @@ struct ReportDetailView: View {
                         .foregroundColor(.secondary)
                 }
 
-                // Video player
+                // Video player — tap to go full screen
                 if let videoURL = report.localVideoURL {
-                    VideoPlayer(player: AVPlayer(url: videoURL))
-                        .frame(height: 250)
-                        .cornerRadius(12)
+                    Button {
+                        showFullScreenVideo = true
+                    } label: {
+                        ZStack {
+                            VideoPlayer(player: AVPlayer(url: videoURL))
+                                .frame(height: 250)
+                                .cornerRadius(12)
+                                .disabled(true)
+
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.black.opacity(0.5))
+                                .cornerRadius(8)
+                        }
+                    }
+                    .fullScreenCover(isPresented: $showFullScreenVideo) {
+                        FullScreenVideoView(videoURL: videoURL)
+                    }
                 }
 
                 // Description
@@ -221,5 +239,33 @@ struct ReportDetailView: View {
             return display.string(from: date)
         }
         return iso
+    }
+}
+
+// Full screen video player with a close button
+struct FullScreenVideoView: View {
+    @Environment(\.dismiss) private var dismiss
+    let videoURL: URL
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Color.black.ignoresSafeArea()
+
+            VideoPlayer(player: AVPlayer(url: videoURL))
+                .ignoresSafeArea()
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.title3)
+                    .foregroundColor(.white)
+                    .padding(12)
+                    .background(Color.black.opacity(0.5))
+                    .clipShape(Circle())
+            }
+            .padding(.top, 60)
+            .padding(.leading, 20)
+        }
     }
 }
