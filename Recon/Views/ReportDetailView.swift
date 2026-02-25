@@ -55,7 +55,7 @@ struct ReportDetailView: View {
                 // Timeline
                 if !report.timeline.isEmpty {
                     sectionHeader("Timeline")
-                    ForEach(report.timeline, id: \.timestamp) { event in
+                    ForEach(Array(report.timeline.enumerated()), id: \.offset) { _, event in
                         HStack(alignment: .top) {
                             Text(event.timestamp)
                                 .font(.system(.caption, design: .monospaced))
