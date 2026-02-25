@@ -45,12 +45,17 @@ class ReportStorageService {
             }
             
             // compact map is map but skips any fails
-            return jsonFiles.compactMap { fileURL in
+            let reports = jsonFiles.compactMap { fileURL -> IncidentReport? in
                 guard let data = try? Data(contentsOf: fileURL),
                       let report = try? JSONDecoder().decode(IncidentReport.self, from: data) else {
                     return nil
                 }
                 return report
+            }
+
+            // Sort by date, most recent first
+            return reports.sorted { a, b in
+                (a.timestamp ?? "") > (b.timestamp ?? "")
             }
         } catch {
             print("Failed to load reports: \(error)")

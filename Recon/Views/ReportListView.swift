@@ -56,7 +56,7 @@ struct ReportListView: View {
     private func reportRow(_ report: IncidentReport) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(report.incidentType)
+                Text("Category: \(report.incidentType)")
                     .font(.headline)
                 if let timestamp = report.timestamp {
                     Text(formatTimestamp(timestamp))
