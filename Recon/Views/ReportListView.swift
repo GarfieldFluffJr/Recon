@@ -11,10 +11,12 @@ import SwiftUI
 
 struct ReportListView: View {
     @State private var reports: [IncidentReport] = []
+    @State private var navigationPath = NavigationPath()
     private let storageService = ReportStorageService()
+    var openReportID: UUID? = nil
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 if reports.isEmpty {
                     VStack(spacing: 12) {
@@ -33,10 +35,7 @@ struct ReportListView: View {
                 } else {
                     List {
                         ForEach(reports) { report in
-                            NavigationLink(destination: ReportDetailView(report: report, onDelete: {
-                                storageService.delete(report: report)
-                                reports.removeAll { $0.id == report.id }
-                            })) {
+                            NavigationLink(value: report.id) {
                                 reportRow(report)
                             }
                         }
@@ -50,8 +49,20 @@ struct ReportListView: View {
                 }
             }
             .navigationTitle("Reports")
+            .navigationDestination(for: UUID.self) { reportID in
+                if let report = reports.first(where: { $0.id == reportID }) {
+                    ReportDetailView(report: report, onDelete: {
+                        storageService.delete(report: report)
+                        reports.removeAll { $0.id == report.id }
+                    })
+                }
+            }
             .onAppear {
                 reports = storageService.loadAll()
+                // Auto-open a specific report if requested
+                if let id = openReportID, reports.contains(where: { $0.id == id }) {
+                    navigationPath.append(id)
+                }
             }
         }
     }

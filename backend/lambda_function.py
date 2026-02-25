@@ -133,7 +133,7 @@ def build_analysis_prompt(transcript, gps, duration):
     ---
 
     CRITICAL INSTRUCTIONS:
-    - The video uses a picture-in-picture layout: the main (larger) view is the rear-facing camera, and the small overlay in the corner is the front-facing camera showing the person recording. This is the normal recording format — do NOT comment on the split-screen or PiP layout itself.
+    - The video uses a picture-in-picture layout: the main (larger) view is the rear-facing camera, and the small overlay in the top-right corner is the front-facing camera showing the person recording. This is the normal recording format. Do NOT comment on the split-screen or PiP layout. Do NOT describe the person in the small corner overlay or mention their position on screen (e.g., do NOT say "person in the top right corner").
     - Only report information that is clearly visible or audible.
     - Do NOT guess or assume details that are not supported by evidence.
     - If something is unclear, state that it is unclear.
@@ -142,7 +142,7 @@ def build_analysis_prompt(transcript, gps, duration):
     - Identify environmental clues (street signs, business names, intersections, landmarks).
     - Highlight escalation indicators (smoke thickening, physical violence, worsening condition).
     - Provide a thorough, detailed description (4-6 sentences minimum) covering the scene, environment, weather, lighting, and any notable details.
-    - For the timeline, include an entry for every significant moment or change you observe in the video, referencing the burned-in timestamp if visible.
+    - For the timeline, use the burned-in timestamp visible in the bottom-left corner of the video (format HH:MM:SS, showing the actual time of day). Do NOT use relative timestamps like 00:00:00. Include an entry for every significant moment or change you observe.
     - List ALL people visible, their approximate locations, actions, and any identifying features.
 
     Respond with ONLY a valid JSON object (no extra text) using EXACTLY this structure:
@@ -159,7 +159,7 @@ def build_analysis_prompt(transcript, gps, duration):
       }},
       "timeline": [
         {{
-          "timestamp": "HH:MM:SS if visible",
+          "timestamp": "HH:MM:SS from burned-in video timestamp (actual time of day, not relative)",
           "event": "description of key event"
         }}
       ],

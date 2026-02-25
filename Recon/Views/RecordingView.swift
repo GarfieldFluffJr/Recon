@@ -14,6 +14,7 @@ struct RecordingView: View {
     @StateObject var camera = CameraService()
     @StateObject var analysisVM = AnalysisViewModel()
     @State private var showAnalysis = false
+    var switchToReports: (UUID?) -> Void = { _ in }
 
     var body: some View {
         ZStack {
@@ -94,6 +95,9 @@ struct RecordingView: View {
             if showAnalysis {
                 AnalysisProgressView(viewModel: analysisVM, onDismiss: {
                     showAnalysis = false
+                    if let report = analysisVM.report {
+                        switchToReports(report.id)
+                    }
                 })
             }
         }
