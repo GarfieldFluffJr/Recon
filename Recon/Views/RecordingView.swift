@@ -8,6 +8,7 @@
 // Main screen - combines the camera feed and the app features
 
 import SwiftUI
+import CoreLocation
 
 struct RecordingView: View {
     @StateObject var camera = CameraService()

@@ -17,7 +17,7 @@ class AnalysisViewModel: ObservableObject {
     @Published var error: String?
     
     private let apiService = APIService()
-    private let storageService = ReportStorageSerice()
+    private let storageService = ReportStorageService()
     
     func analyze(videoURL: URL, transcript: String, latitude: Double, longitude: Double, duration: Double) {
         isAnalyzing = true
