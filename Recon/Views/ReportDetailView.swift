@@ -19,7 +19,7 @@ struct ReportDetailView: View {
 
                 // Header — incident type + severity
                 HStack {
-                    Text(report.incidentType)
+                    Text("Category: \(report.incidentType)")
                         .font(.title2)
                         .bold()
                     Spacer()
@@ -34,8 +34,14 @@ struct ReportDetailView: View {
                 }
 
                 // Timestamp + confidence
-                if let timestamp = report.timestamp {
-                    Text(formatTimestamp(timestamp))
+                HStack {
+                    if let timestamp = report.timestamp {
+                        Text(formatTimestamp(timestamp))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Text("Confidence: \(report.confidenceLevel)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -53,8 +59,10 @@ struct ReportDetailView: View {
                     .font(.body)
 
                 // Timeline
-                if !report.timeline.isEmpty {
-                    sectionHeader("Timeline")
+                sectionHeader("Timeline")
+                if report.timeline.isEmpty {
+                    noneText()
+                } else {
                     ForEach(Array(report.timeline.enumerated()), id: \.offset) { _, event in
                         HStack(alignment: .top) {
                             Text(event.timestamp)
@@ -68,33 +76,39 @@ struct ReportDetailView: View {
                 }
 
                 // People involved
-                if report.peopleInvolved.approximateCount != "0" && report.peopleInvolved.approximateCount != "Unknown" {
-                    sectionHeader("People Involved (\(report.peopleInvolved.approximateCount))")
+                sectionHeader("People Involved (\(report.peopleInvolved.approximateCount))")
+                if report.peopleInvolved.descriptions.isEmpty {
+                    noneText()
+                } else {
                     ForEach(report.peopleInvolved.descriptions, id: \.self) { desc in
                         bulletPoint(desc)
                     }
-                    if !report.peopleInvolved.visibleInjuries.isEmpty {
-                        Text("Injuries:")
-                            .font(.subheadline)
-                            .bold()
-                            .padding(.top, 4)
-                        ForEach(report.peopleInvolved.visibleInjuries, id: \.self) { injury in
-                            bulletPoint(injury)
-                        }
+                }
+                if !report.peopleInvolved.visibleInjuries.isEmpty {
+                    Text("Injuries:")
+                        .font(.subheadline)
+                        .bold()
+                        .padding(.top, 4)
+                    ForEach(report.peopleInvolved.visibleInjuries, id: \.self) { injury in
+                        bulletPoint(injury)
                     }
                 }
 
                 // Hazards
-                if !report.hazardsObserved.isEmpty {
-                    sectionHeader("Hazards Observed")
+                sectionHeader("Hazards Observed")
+                if report.hazardsObserved.isEmpty {
+                    noneText()
+                } else {
                     ForEach(report.hazardsObserved, id: \.self) { hazard in
                         bulletPoint(hazard)
                     }
                 }
 
                 // Transcript highlights
-                if !report.transcriptHighlights.isEmpty {
-                    sectionHeader("Transcript Highlights")
+                sectionHeader("Transcript Highlights")
+                if report.transcriptHighlights.isEmpty {
+                    noneText()
+                } else {
                     ForEach(report.transcriptHighlights, id: \.self) { quote in
                         Text("\"\(quote)\"")
                             .font(.body)
@@ -104,10 +118,15 @@ struct ReportDetailView: View {
                 }
 
                 // Location details
-                if !report.locationDetails.visibleStreetNames.isEmpty || !report.locationDetails.landmarks.isEmpty {
-                    sectionHeader("Location Details")
+                sectionHeader("Location Details")
+                if report.locationDetails.visibleStreetNames.isEmpty && report.locationDetails.landmarks.isEmpty && report.locationDetails.intersectionDescription.isEmpty {
+                    noneText()
+                } else {
                     ForEach(report.locationDetails.visibleStreetNames, id: \.self) { street in
                         bulletPoint(street)
+                    }
+                    ForEach(report.locationDetails.visibleBusinessNames, id: \.self) { business in
+                        bulletPoint(business)
                     }
                     ForEach(report.locationDetails.landmarks, id: \.self) { landmark in
                         bulletPoint(landmark)
@@ -119,8 +138,10 @@ struct ReportDetailView: View {
                 }
 
                 // Recommended actions
-                if !report.recommendedActions.isEmpty {
-                    sectionHeader("Recommended Actions")
+                sectionHeader("Recommended Actions")
+                if report.recommendedActions.isEmpty {
+                    noneText()
+                } else {
                     ForEach(report.recommendedActions, id: \.self) { action in
                         bulletPoint(action)
                     }
@@ -155,6 +176,14 @@ struct ReportDetailView: View {
         Text(title)
             .font(.headline)
             .padding(.top, 8)
+    }
+
+    // "None observed/reported" text
+    private func noneText() -> some View {
+        Text("None observed")
+            .font(.body)
+            .foregroundColor(.secondary)
+            .italic()
     }
 
     // Bullet point helper
