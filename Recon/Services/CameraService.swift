@@ -13,6 +13,7 @@ class CameraService: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var isReady = false
     @Published var recordingTime: TimeInterval = 0
+    private var isConfigured = false
 
     // Dual camera session (upgraded from AVCaptureSession)
     let session = AVCaptureMultiCamSession()
@@ -51,6 +52,8 @@ class CameraService: NSObject, ObservableObject {
 
     // Request permissions one at a time, then set up the camera
     func configure() {
+        guard !isConfigured else { return }
+        isConfigured = true
         print("configure() called")
 
         // 1. Camera permission
