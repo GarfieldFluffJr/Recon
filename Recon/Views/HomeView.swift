@@ -8,9 +8,11 @@
 // Homepage
 
 import SwiftUI
+import CoreLocation
 
 struct HomeView: View {
     @State private var isRecording = false
+    @StateObject private var locationService = LocationService()
 
     var body: some View {
         NavigationStack {
@@ -115,28 +117,32 @@ struct HomeView: View {
                 HStack {
                     HStack(spacing: 12) {
                         Circle()
-                            .fill(Color.green)
+                            .fill(locationService.location != nil ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
-                        Text("Connected")
+                        Text(locationService.location != nil ? "Connected" : "Not Connected")
                             .font(.system(size: 14, weight: .medium))
                     }
                     Spacer()
-                    Text("GPS Active")
+                    Text(locationService.location != nil ? "GPS Active" : "GPS Inactive")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.red)
+                        .foregroundColor(locationService.location != nil ? .green : .red)
                 }
                 .padding(16)
-                .background(Color(.systemGray6))
+                .background(locationService.location != nil ? Color.green.opacity(0.1) : Color(.systemGray6))
                 .cornerRadius(16)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.red.opacity(0.2), lineWidth: 1)
+                        .stroke(locationService.location != nil ? Color.green.opacity(0.3) : Color.red.opacity(0.2), lineWidth: 1)
                 )
                 .padding(.horizontal)
                 .padding(.bottom, 16)
 
                 Spacer().frame(height: 10)
             }
+        }
+        .onAppear {
+            locationService.requestPermission()
+            locationService.startUpdating()
         }
     }
 }
