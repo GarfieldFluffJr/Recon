@@ -197,7 +197,3 @@ struct HomeView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 }
-
-#Preview {
-    ContentView()
-}

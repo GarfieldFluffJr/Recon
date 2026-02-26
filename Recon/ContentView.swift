@@ -47,6 +47,12 @@ struct ContentView: View {
                     Label("Reports", systemImage: "doc.text.fill")
                 }
                 .tag(2)
+
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
+                }
+                .tag(3)
         }
         .onChange(of: selectedTab) {
             if selectedTab != 2 {
