@@ -11,8 +11,8 @@ import SwiftUI
 import CoreLocation
 
 struct RecordingView: View {
-    @StateObject var camera = CameraService()
-    @StateObject var analysisVM = AnalysisViewModel()
+    @ObservedObject var camera: CameraService
+    @ObservedObject var analysisVM: AnalysisViewModel
     @State private var showAnalysis = false
     var switchToReports: (UUID?) -> Void = { _ in }
 
@@ -47,25 +47,7 @@ struct RecordingView: View {
 
                 Button {
                     if camera.isRecording {
-                        camera.stopRecording { videoURL, transcript in
-                            guard let videoURL = videoURL else { return }
-
-                            let location = camera.locationService.location
-                            let latitude = location?.coordinate.latitude ?? 0
-                            let longitude = location?.coordinate.longitude ?? 0
-                            let duration = camera.recordingTime
-
-                            DispatchQueue.main.async {
-                                showAnalysis = true
-                                analysisVM.analyze(
-                                    videoURL: videoURL,
-                                    transcript: transcript,
-                                    latitude: latitude,
-                                    longitude: longitude,
-                                    duration: duration
-                                )
-                            }
-                        }
+                        stopAndAnalyze()
                     } else {
                         camera.startRecording()
                     }
@@ -101,12 +83,30 @@ struct RecordingView: View {
                 })
             }
         }
-        .onAppear {
-            camera.configure()
+    }
+
+    func stopAndAnalyze() {
+        camera.stopRecording { videoURL, transcript in
+            guard let videoURL = videoURL else { return }
+
+            let location = camera.locationService.location
+            let latitude = location?.coordinate.latitude ?? 0
+            let longitude = location?.coordinate.longitude ?? 0
+            let duration = camera.recordingTime
+
+            DispatchQueue.main.async {
+                showAnalysis = true
+                analysisVM.analyze(
+                    videoURL: videoURL,
+                    transcript: transcript,
+                    latitude: latitude,
+                    longitude: longitude,
+                    duration: duration
+                )
+            }
         }
     }
 
-    // Format seconds into MM:SS
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60

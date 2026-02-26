@@ -21,15 +21,17 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Recon Icon White Square" translatesAutoresizingMaskIntoConstraints="NO" id="3Ig-eZ-BNi">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Recon Icon Square Small" translatesAutoresizingMaskIntoConstraints="NO" id="3Ig-eZ-BNi">
                                 <rect key="frame" x="121.66666666666669" y="351" width="150" height="150"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="250" id="30g-Jn-VlL"/>
+                                    <constraint firstAttribute="width" relation="lessThanOrEqual" constant="150" id="4Gl-e9-BwN"/>
                                     <constraint firstAttribute="height" constant="150" id="OTC-cQ-ERM"/>
                                     <constraint firstAttribute="width" relation="lessThanOrEqual" constant="250" id="dOk-Fc-mE2"/>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="250" id="ee0-yE-qBd"/>
                                     <constraint firstAttribute="height" relation="lessThanOrEqual" constant="250" id="m6Y-6T-sHw"/>
                                     <constraint firstAttribute="width" constant="150" id="rPh-bs-kxR"/>
+                                    <constraint firstAttribute="height" relation="lessThanOrEqual" constant="150" id="yJg-Ps-710"/>
                                 </constraints>
                             </imageView>
                         </subviews>
@@ -44,7 +46,9 @@
                             <constraint firstItem="3Ig-eZ-BNi" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="Wxp-vB-pdM"/>
                             <constraint firstAttribute="bottom" secondItem="obG-Y5-kRd" secondAttribute="bottom" constant="20" id="Y44-ml-fuU"/>
                             <constraint firstItem="3Ig-eZ-BNi" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Yzf-2h-S1E"/>
+                            <constraint firstItem="3Ig-eZ-BNi" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="cvn-PI-9co"/>
                             <constraint firstItem="3Ig-eZ-BNi" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="dZc-I5-Bsb"/>
+                            <constraint firstItem="3Ig-eZ-BNi" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="yPv-wy-ZWv"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -54,6 +58,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Recon Icon White Square" width="1024" height="1024"/>
+        <image name="Recon Icon Square Small" width="1024" height="1024"/>
     </resources>
 </document>
