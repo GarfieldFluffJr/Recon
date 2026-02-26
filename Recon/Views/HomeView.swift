@@ -115,7 +115,7 @@ struct HomeView: View {
 
                     // Helper text
                     Text(camera.isRecording
-                        ? "Recording is being sent to emergency services in real-time"
+                        ? "Recording will be sent to emergency services after report analysis"
                         : "Tap the button to start recording and send an analysis to emergency services")
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
