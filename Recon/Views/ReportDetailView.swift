@@ -15,6 +15,7 @@ struct ReportDetailView: View {
     let report: IncidentReport
     var onDelete: (() -> Void)? = nil
     @State private var showFullScreenVideo = false
+    @State private var showUnderConstruction = false
 
     var body: some View {
         ScrollView {
@@ -174,10 +175,34 @@ struct ReportDetailView: View {
                         .font(.system(.body, design: .monospaced))
                         .foregroundColor(.secondary)
                 }
+                // Send report button
+                HStack {
+                    Spacer()
+                    Button {
+                        showUnderConstruction = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "paperplane.fill")
+                            Text("Send Report")
+                                .bold()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.top, 16)
             }
             .padding()
         }
         .navigationTitle("Incident Report")
+        .alert("Under Construction", isPresented: $showUnderConstruction) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Sending reports to emergency responders is not yet available.")
+        }
         .toolbar {
             if let onDelete = onDelete {
                 ToolbarItem(placement: .destructiveAction) {
