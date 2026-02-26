@@ -77,6 +77,8 @@ struct RecordingView: View {
             if showAnalysis {
                 AnalysisProgressView(viewModel: analysisVM, onDismiss: {
                     showAnalysis = false
+                }, onViewReport: {
+                    showAnalysis = false
                     if let report = analysisVM.report {
                         switchToReports(report.id)
                     }
