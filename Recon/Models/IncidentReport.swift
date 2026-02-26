@@ -23,6 +23,7 @@ struct IncidentReport: Codable, Identifiable {
     let transcriptHighlights: [String]
     let description: String
     let recommendedActions: [String]
+    let languageAnalysis: LanguageAnalysis?
 
     // Metadata added by Lambda
     let location: GPSLocation?
@@ -45,7 +46,7 @@ struct IncidentReport: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, incidentType, severity, confidenceLevel, locationDetails
         case timeline, peopleInvolved, hazardsObserved, transcriptHighlights
-        case description, recommendedActions, location, videoKey
+        case description, recommendedActions, languageAnalysis, location, videoKey
         case timestamp, duration, transcriptSource, parseError
         case localVideoFileName
     }
@@ -65,6 +66,7 @@ struct IncidentReport: Codable, Identifiable {
         transcriptHighlights = try container.decode([String].self, forKey: .transcriptHighlights)
         description = try container.decode(String.self, forKey: .description)
         recommendedActions = try container.decode([String].self, forKey: .recommendedActions)
+        languageAnalysis = try? container.decode(LanguageAnalysis.self, forKey: .languageAnalysis)
         location = try? container.decode(GPSLocation.self, forKey: .location)
         videoKey = try? container.decode(String.self, forKey: .videoKey)
         timestamp = try? container.decode(String.self, forKey: .timestamp)
@@ -90,6 +92,13 @@ struct IncidentReport: Codable, Identifiable {
         let approximateCount: String
         let visibleInjuries: [String]
         let descriptions: [String]
+    }
+
+    struct LanguageAnalysis: Codable {
+        let primarySpokenLanguage: String
+        let otherLanguagesDetected: [String]
+        let visibleTextLanguages: [String]
+        let translationConfidence: String
     }
 
     struct GPSLocation: Codable {
