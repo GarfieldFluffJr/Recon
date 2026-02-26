@@ -113,7 +113,7 @@ struct HomeView: View {
 
                 // Status bar
                 HStack {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 12) {
                         Circle()
                             .fill(Color.green)
                             .frame(width: 8, height: 8)
