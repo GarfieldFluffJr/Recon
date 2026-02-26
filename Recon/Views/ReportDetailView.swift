@@ -138,6 +138,21 @@ struct ReportDetailView: View {
                     }
                 }
 
+                // Language analysis
+                sectionHeader("Language Analysis")
+                if let lang = report.languageAnalysis {
+                    bulletPoint("Primary spoken language: \(lang.primarySpokenLanguage)")
+                    if !lang.otherLanguagesDetected.isEmpty {
+                        bulletPoint("Other languages: \(lang.otherLanguagesDetected.joined(separator: ", "))")
+                    }
+                    if !lang.visibleTextLanguages.isEmpty {
+                        bulletPoint("Visible text languages: \(lang.visibleTextLanguages.joined(separator: ", "))")
+                    }
+                    bulletPoint("Translation confidence: \(lang.translationConfidence)")
+                } else {
+                    noneText()
+                }
+
                 // Location details
                 sectionHeader("Location Details")
                 if report.locationDetails.visibleStreetNames.isEmpty && report.locationDetails.landmarks.isEmpty && report.locationDetails.intersectionDescription.isEmpty {
