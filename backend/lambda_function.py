@@ -162,7 +162,7 @@ def analyze(body):
   os.remove(tmp_path)
 
   # Step 3: Analyze video with Nova 2 Lite
-  prompt = build_analysis_prompt(transcript, gps, duration, language)
+  prompt = build_analysis_prompt(transcript, gps, duration, language, detected_language, transcript_source)
 
   try:
     nova_response = nova_client.chat.completions.create(
@@ -201,9 +201,20 @@ def analyze(body):
     return make_response(500, {"error": str(e)})
 
   
-def build_analysis_prompt(transcript, gps, duration, language="en-US"):
+def build_analysis_prompt(transcript, gps, duration, language="en-US", detected_language=None, transcript_source="apple"):
   latitude = gps.get("latitude", "Unknown")
   longitude = gps.get("longitude", "Unknown")
+
+  # Build dynamic sections based on transcript source
+  if detected_language:
+    lang_info = f"\n    - Detected audio language (via Amazon Transcribe): {detected_language}"
+  else:
+    lang_info = ""
+
+  if transcript_source == "transcribe":
+    transcript_header = "SPEECH TRANSCRIPT (Amazon Transcribe, auto-detected language)"
+  else:
+    transcript_header = "SPEECH TRANSCRIPT (Apple on-device recognition)"
 
   return f"""
     You are an emergency incident video analyzer assisting 911 dispatch and first responders.
