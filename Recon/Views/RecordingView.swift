@@ -19,7 +19,7 @@ struct RecordingView: View {
 
     var body: some View {
         ZStack {
-            CameraPreviewView(session: camera.session).ignoresSafeArea()
+            CameraPreviewView(session: camera.session).ignoresSafeArea(edges: .top)
             VStack {
                 // Recording timer at top
                 if camera.isRecording {
