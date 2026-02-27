@@ -59,6 +59,12 @@ struct ContentView: View {
             if selectedTab != 2 {
                 openReportID = nil
             }
+            // Pause camera when leaving record tab so AVPlayer can use the audio session
+            if selectedTab == 0 {
+                camera.resumeSession()
+            } else {
+                camera.pauseSession()
+            }
         }
         .onAppear {
             camera.configure()
