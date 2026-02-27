@@ -50,6 +50,31 @@ struct ReportDetailView: View {
                         .foregroundColor(.secondary)
                 }
 
+                // Transcript reliability warning
+                if let reliability = report.transcriptReliability,
+                   reliability.status != "Reliable" {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(reliability.status == "Unreliable" ? .red : .orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Transcript: \(reliability.status)")
+                                .font(.subheadline)
+                                .bold()
+                            if !reliability.notes.isEmpty {
+                                Text(reliability.notes)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(reliability.status == "Unreliable" ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
+                    )
+                }
+
                 // Video player — tap to go full screen
                 if let videoURL = report.localVideoURL {
                     Button {
