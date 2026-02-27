@@ -16,6 +16,7 @@ struct ReportDetailView: View {
     var onDelete: (() -> Void)? = nil
     @State private var showFullScreenVideo = false
     @State private var showUnderConstruction = false
+    @State private var player: AVPlayer?
 
     var body: some View {
         ScrollView {
@@ -81,10 +82,16 @@ struct ReportDetailView: View {
                         showFullScreenVideo = true
                     } label: {
                         ZStack {
-                            VideoPlayer(player: AVPlayer(url: videoURL))
-                                .frame(height: 250)
-                                .cornerRadius(12)
-                                .disabled(true)
+                            if let player = player {
+                                VideoPlayer(player: player)
+                                    .frame(height: 250)
+                                    .cornerRadius(12)
+                                    .disabled(true)
+                            } else {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemGray5))
+                                    .frame(height: 250)
+                            }
 
                             Image(systemName: "arrow.up.left.and.arrow.down.right")
                                 .font(.title2)
@@ -92,6 +99,11 @@ struct ReportDetailView: View {
                                 .padding(10)
                                 .background(Color.black.opacity(0.5))
                                 .cornerRadius(8)
+                        }
+                    }
+                    .onAppear {
+                        if player == nil {
+                            player = AVPlayer(url: videoURL)
                         }
                     }
                     .fullScreenCover(isPresented: $showFullScreenVideo) {

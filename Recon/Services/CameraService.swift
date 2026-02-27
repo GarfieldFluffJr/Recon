@@ -251,6 +251,44 @@ class CameraService: NSObject, ObservableObject {
         }
     }
 
+    /// Pause the capture session and switch audio to playback mode so AVPlayer can work
+    func pauseSession() {
+        guard !isRecording else { return } // never pause mid-recording
+        DispatchQueue.global(qos: .userInitiated).async {
+            if self.session.isRunning {
+                self.session.stopRunning()
+                print("Session paused for playback")
+            }
+            // Switch audio session from capture mode to playback mode
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                try audioSession.setCategory(.playback)
+                try audioSession.setActive(true)
+                print("Audio session switched to playback")
+            } catch {
+                print("Failed to switch audio session: \(error)")
+            }
+        }
+    }
+
+    /// Resume the capture session when returning to the camera tab
+    func resumeSession() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard !self.session.isRunning else { return }
+            // Reconfigure audio session for capture
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
+                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            } catch {
+                print("Failed to reactivate audio session: \(error)")
+            }
+            self.session.startRunning()
+            print("Session resumed")
+        }
+    }
+
     func setTranscriptionLanguage(_ identifier: String) {
         transcriptionService.setLocale(identifier)
     }
