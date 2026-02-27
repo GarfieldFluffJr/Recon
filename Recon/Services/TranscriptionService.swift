@@ -13,8 +13,8 @@ import Combine
 class TranscriptionService: ObservableObject {
     @Published var liveTranscript = ""
     
-    // Pre-created so startTranscribing() is fast
-    private let recognizer = SFSpeechRecognizer()
+    // Recognizer created with a specific locale (defaults to en-US)
+    private var recognizer: SFSpeechRecognizer? = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask? // Gives results as speech is decteced - active recognition
     
@@ -25,6 +25,12 @@ class TranscriptionService: ObservableObject {
     // Each 50s segment's text gets saved here so nothing is lost during restart
     private var completedText = ""
     
+    // Recreate the recognizer with a new locale (call before recording starts)
+    func setLocale(_ identifier: String) {
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: identifier))
+        recognizer?.defaultTaskHint = .dictation
+    }
+
     // Show the permission modal
     func requestPermission() {
         SFSpeechRecognizer.requestAuthorization { status in
@@ -33,7 +39,7 @@ class TranscriptionService: ObservableObject {
     }
     
     func startTranscribing() {
-        guard let recognizer = recognizer, recognizer.isAvailable else {
+        guard let recognizer, recognizer.isAvailable else {
             print("Speech recognizer not available")
             return
         }

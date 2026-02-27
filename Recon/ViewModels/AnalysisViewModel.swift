@@ -19,7 +19,7 @@ class AnalysisViewModel: ObservableObject {
     private let apiService = APIService()
     private let storageService = ReportStorageService()
     
-    func analyze(videoURL: URL, transcript: String, latitude: Double, longitude: Double, duration: Double) {
+    func analyze(videoURL: URL, transcript: String, latitude: Double, longitude: Double, duration: Double, language: String = "en-US") {
         isAnalyzing = true
         error = nil
         uploadProgress = "Getting upload URL..."
@@ -43,7 +43,7 @@ class AnalysisViewModel: ObservableObject {
                 }
                 
                 // Analyze with Nova 2 Lite
-                var report = try await apiService.analyzeVideo(videoKey: videoKey, transcript: transcript, latitude: latitude, longitude: longitude, duration: duration)
+                var report = try await apiService.analyzeVideo(videoKey: videoKey, transcript: transcript, latitude: latitude, longitude: longitude, duration: duration, language: language)
                 // Attach local video file name so user can replay with the report
                 report.localVideoFileName = videoURL.lastPathComponent
                 

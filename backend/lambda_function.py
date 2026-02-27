@@ -60,6 +60,7 @@ def analyze(body):
   apple_transcript = body.get("transcript", "") # fallback
   gps = body.get("gps", {})
   duration = body.get("duration", 0)
+  language = body.get("language", "en-US")
 
   if not video_key:
     return make_response(400, {"error": "videoKey is required"})
@@ -80,7 +81,7 @@ def analyze(body):
   os.remove(tmp_path)
 
   # Step 3: Analyze video with Nova 2 Lite
-  prompt = build_analysis_prompt(transcript, gps, duration)
+  prompt = build_analysis_prompt(transcript, gps, duration, language)
 
   try:
     nova_response = nova_client.chat.completions.create(
@@ -113,14 +114,20 @@ def analyze(body):
     return make_response(500, {"error": str(e)})
 
   
-def build_analysis_prompt(transcript, gps, duration):
+def build_analysis_prompt(transcript, gps, duration, language="en-US"):
   latitude = gps.get("latitude", "Unknown")
   longitude = gps.get("longitude", "Unknown")
-  
+
   return f"""
     You are an emergency incident video analyzer assisting 911 dispatch and first responders.
 
     Analyze the provided video carefully. This report will be viewed by emergency personnel and must prioritize factual, observable, responder-relevant information.
+
+    LANGUAGE CONTEXT:
+    - The recording language is: {language}
+    - The transcript was captured in this language using on-device speech recognition.
+    - Analyze all audio and text content with this language in mind.
+    - Always respond in English regardless of the input language.
 
     VIDEO METADATA:
     - Duration: {duration} seconds
