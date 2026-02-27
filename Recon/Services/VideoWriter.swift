@@ -20,7 +20,7 @@ class VideoWriter {
     var isWriting = false
     private var sessionStarted = false
     
-    func startWriting(to url: URL, videoSize: CGSize) {
+    func startWriting(to url: URL, videoSize: CGSize, withAudio: Bool = true) {
         // Reset everything from previous recording
         assetWriter = nil
         videoInput = nil
@@ -35,17 +35,17 @@ class VideoWriter {
             print("Failed to create asset writer: \(error)")
             return
         }
-        
+
         // Video input settings
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264, // H.264 standard compression format
             AVVideoWidthKey: Int(videoSize.width),
             AVVideoHeightKey: Int(videoSize.height)
         ]
-        
+
         videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
         videoInput?.expectsMediaDataInRealTime = true
-        
+
         // Pixel buffer adaptor - converts CIImage frames into pixel buffers the writer understands
         pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: videoInput!,
@@ -55,26 +55,28 @@ class VideoWriter {
                 kCVPixelBufferHeightKey as String: Int(videoSize.height)
             ]
         )
-        
-        // Audio input settings
-        let audioSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: 44100.0,
-            AVNumberOfChannelsKey: 1
-        ]
-        
-        audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
-        audioInput?.expectsMediaDataInRealTime = true
-    
+
+        // Audio input settings — skip if audio unavailable (e.g. phone call)
+        if withAudio {
+            let audioSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 44100.0,
+                AVNumberOfChannelsKey: 1
+            ]
+
+            audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+            audioInput?.expectsMediaDataInRealTime = true
+        }
+
         // Add inputs to writer
         if let videoInput = videoInput, assetWriter?.canAdd(videoInput) == true {
             assetWriter?.add(videoInput)
         }
-        
+
         if let audioInput = audioInput, assetWriter?.canAdd(audioInput) == true {
             assetWriter?.add(audioInput)
         }
-        
+
         assetWriter?.startWriting()
         isWriting = true
         sessionStarted = false

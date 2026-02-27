@@ -42,6 +42,8 @@ class CameraService: NSObject, ObservableObject {
     // Recording state
     private var timer: Timer?
     private var currentFileURL: URL?
+    private var audioInput: AVCaptureDeviceInput?
+    private var hasAudioAttached = false
 
     // 720p portrait
     private let videoSize = CGSize(width: 720, height: 1280)
@@ -90,16 +92,44 @@ class CameraService: NSObject, ObservableObject {
 
     // All the camera pipeline setup, called after permissions are granted
     private func setupSession() {
+        configureAndStartSession(withAudio: true)
+
+        // Listen for audio interruptions (phone calls) — more reliable than AVCaptureSession notifications
+        NotificationCenter.default.addObserver(self, selector: #selector(audioSessionInterrupted), name: AVAudioSession.interruptionNotification, object: nil)
+    }
+
+    /// Tears down and rebuilds the capture session. Safe to call repeatedly.
+    private func configureAndStartSession(withAudio: Bool) {
         guard AVCaptureMultiCamSession.isMultiCamSupported else {
             print("MultiCam not supported on this device")
             return
         }
 
+        // Stop the session if it's already running
+        if session.isRunning {
+            session.stopRunning()
+        }
+
+        // Configure audio session
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("Audio session configured")
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
+
+        // Clear all existing inputs/outputs/connections
         session.beginConfiguration()
+        for input in session.inputs { session.removeInput(input) }
+        for output in session.outputs { session.removeOutput(output) }
+        for connection in session.connections { session.removeConnection(connection) }
 
         // Back camera
         guard let backDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("No back camera found")
+            session.commitConfiguration()
             return
         }
 
@@ -111,12 +141,14 @@ class CameraService: NSObject, ObservableObject {
             }
         } catch {
             print("Failed to create back camera input: \(error)")
+            session.commitConfiguration()
             return
         }
 
         // Front camera
         guard let frontDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
             print("No front camera found")
+            session.commitConfiguration()
             return
         }
 
@@ -128,41 +160,46 @@ class CameraService: NSObject, ObservableObject {
             }
         } catch {
             print("Failed to create front camera input: \(error)")
+            session.commitConfiguration()
             return
         }
 
-        // Microphone
-        if let audioDevice = AVCaptureDevice.default(for: .audio) {
+        // Microphone — only if requested and audio hardware is available
+        hasAudioAttached = false
+        if withAudio, let audioDevice = AVCaptureDevice.default(for: .audio) {
             do {
-                let audioInput = try AVCaptureDeviceInput(device: audioDevice)
-                if session.canAddInput(audioInput) {
-                    session.addInput(audioInput)
+                let input = try AVCaptureDeviceInput(device: audioDevice)
+                if session.canAddInput(input) {
+                    session.addInput(input)
+                    audioInput = input
+                    hasAudioAttached = true
                     print("Added audio input")
+                } else {
+                    print("Cannot add audio input — likely in use by phone call")
                 }
             } catch {
-                print("Failed to create audio input: \(error)")
+                print("Failed to create audio input: \(error) — continuing without audio")
             }
         }
 
-        // Back camera output — delegate sends raw frames to captureOutput()
+        // Back camera output
         backVideoOutput.setSampleBufferDelegate(self, queue: dataQueue)
         if session.canAddOutput(backVideoOutput) {
             session.addOutput(backVideoOutput)
-            print("Added back video output")
         }
 
         // Front camera output
         frontVideoOutput.setSampleBufferDelegate(self, queue: dataQueue)
         if session.canAddOutput(frontVideoOutput) {
             session.addOutput(frontVideoOutput)
-            print("Added front video output")
         }
 
-        // Audio output
-        audioOutput.setSampleBufferDelegate(self, queue: dataQueue)
-        if session.canAddOutput(audioOutput) {
-            session.addOutput(audioOutput)
-            print("Added audio output")
+        // Audio output — only if audio input was added
+        if hasAudioAttached {
+            audioOutput.setSampleBufferDelegate(self, queue: dataQueue)
+            if session.canAddOutput(audioOutput) {
+                session.addOutput(audioOutput)
+            }
         }
 
         // Manually connect back camera input → back output
@@ -183,14 +220,13 @@ class CameraService: NSObject, ObservableObject {
             let frontConnection = AVCaptureConnection(inputPorts: frontInput.ports(for: .video, sourceDeviceType: .builtInWideAngleCamera, sourceDevicePosition: .front), output: frontVideoOutput)
             if session.canAddConnection(frontConnection) {
                 session.addConnection(frontConnection)
-                // Mirror front camera so it looks natural
                 frontConnection.isVideoMirrored = true
                 print("Connected front camera")
             }
         }
 
         session.commitConfiguration()
-        print("Configuration committed, starting session...")
+        print("Configuration committed (audio: \(hasAudioAttached)), starting session...")
 
         // Start GPS
         locationService.startUpdating()
@@ -198,6 +234,20 @@ class CameraService: NSObject, ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             self.session.startRunning()
             print("Session running: \(self.session.isRunning)")
+        }
+    }
+
+    @objc private func audioSessionInterrupted(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        if type == .began {
+            print("Audio interruption began (phone call) — restarting session without audio")
+            configureAndStartSession(withAudio: false)
+        } else if type == .ended {
+            print("Audio interruption ended — restarting session with audio")
+            configureAndStartSession(withAudio: true)
         }
     }
 
@@ -211,7 +261,7 @@ class CameraService: NSObject, ObservableObject {
         let fileURL = documentsPath.appendingPathComponent(fileName)
         currentFileURL = fileURL
 
-        videoWriter.startWriting(to: fileURL, videoSize: videoSize)
+        videoWriter.startWriting(to: fileURL, videoSize: videoSize, withAudio: hasAudioAttached)
 
         DispatchQueue.main.async {
             self.isRecording = true
