@@ -19,26 +19,24 @@ struct HomeView: View {
     @State private var showAnalysis = false
     @State private var selectedLanguage = "en-US"
 
-    private let supportedLanguages: [(name: String, code: String)] = [
-        ("English (US)", "en-US"),
-        ("English (UK)", "en-GB"),
-        ("Spanish", "es-ES"),
-        ("French", "fr-FR"),
-        ("German", "de-DE"),
-        ("Chinese (Mandarin)", "zh-CN"),
-        ("Japanese", "ja-JP"),
-        ("Korean", "ko-KR"),
-        ("Portuguese", "pt-BR"),
-        ("Arabic", "ar-SA"),
-        ("Hindi", "hi-IN"),
-        ("Italian", "it-IT"),
-        ("Russian", "ru-RU"),
+    private let supportedLanguages: [(name: String, code: String, flag: String)] = [
+        ("English (US)", "en-US", "\u{1F1FA}\u{1F1F8}"),
+        ("English (UK)", "en-GB", "\u{1F1EC}\u{1F1E7}"),
+        ("Spanish", "es-ES", "\u{1F1EA}\u{1F1F8}"),
+        ("French", "fr-FR", "\u{1F1EB}\u{1F1F7}"),
+        ("German", "de-DE", "\u{1F1E9}\u{1F1EA}"),
+        ("Chinese (Mandarin)", "zh-CN", "\u{1F1E8}\u{1F1F3}"),
+        ("Japanese", "ja-JP", "\u{1F1EF}\u{1F1F5}"),
+        ("Korean", "ko-KR", "\u{1F1F0}\u{1F1F7}"),
+        ("Portuguese", "pt-BR", "\u{1F1E7}\u{1F1F7}"),
+        ("Arabic", "ar-SA", "\u{1F1F8}\u{1F1E6}"),
+        ("Hindi", "hi-IN", "\u{1F1EE}\u{1F1F3}"),
+        ("Italian", "it-IT", "\u{1F1EE}\u{1F1F9}"),
+        ("Russian", "ru-RU", "\u{1F1F7}\u{1F1FA}"),
     ]
 
-    /// Short display code for the currently selected language (e.g. "EN", "ES")
-    private var languageDisplayCode: String {
-        let code = selectedLanguage.prefix(2).uppercased()
-        return code
+    private var selectedFlag: String {
+        supportedLanguages.first { $0.code == selectedLanguage }?.flag ?? "\u{1F1FA}\u{1F1F8}"
     }
 
     var body: some View {
@@ -75,8 +73,8 @@ struct HomeView: View {
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "globe")
-                                Text(languageDisplayCode)
+                                Text(selectedFlag)
+                                Text(selectedLanguage.uppercased())
                                     .font(.system(size: 14, weight: .semibold))
                             }
                             .padding(.horizontal, 10)
