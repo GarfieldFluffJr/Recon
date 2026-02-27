@@ -64,14 +64,13 @@ class CameraService: NSObject, ObservableObject {
             AVCaptureDevice.requestAccess(for: .audio) { granted in
                 print("Microphone permission: \(granted)")
 
-                // 3. Location permission
+                // 3. Location permission — speech recognition waits until user responds
                 DispatchQueue.main.async {
+                    self.locationService.onPermissionResolved = {
+                        // 4. Speech recognition permission (only after location prompt is dismissed)
+                        self.transcriptionService.requestPermission()
+                    }
                     self.locationService.requestPermission()
-                }
-
-                // 4. Speech recognition permission (slight delay so location popup shows first)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.transcriptionService.requestPermission()
                 }
 
                 // 5. Set up the camera session
