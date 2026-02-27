@@ -23,13 +23,28 @@ struct RecordingView: View {
             VStack {
                 // Recording timer at top
                 if camera.isRecording {
-                    Text(formatTime(camera.recordingTime))
-                        .font(.system(.title2, design: .monospaced))
-                        .foregroundColor(.white)
-                        .padding(8)
-                        .background(Color.red.opacity(0.7))
-                        .cornerRadius(8)
-                        .padding(.top, 60)
+                    VStack(spacing: 8) {
+                        Text(formatTime(camera.recordingTime))
+                            .font(.system(.title2, design: .monospaced))
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.red.opacity(0.7))
+                            .cornerRadius(8)
+
+                        if !camera.audioAvailable {
+                            HStack(spacing: 6) {
+                                Image(systemName: "mic.slash.fill")
+                                Text(AppStrings.get("record.noAudio", selectedLanguage))
+                            }
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.orange.opacity(0.8))
+                            .cornerRadius(6)
+                        }
+                    }
+                    .padding(.top, 60)
                 }
 
                 Spacer()

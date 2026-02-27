@@ -8,22 +8,27 @@
 // Transcribe the audio from the video into a transcript for Nova processing
 
 import Speech
+import AVFoundation
 import Combine
 
 class TranscriptionService: ObservableObject {
     @Published var liveTranscript = ""
-    
+
     // Recognizer created with a specific locale (defaults to en-US)
     private var recognizer: SFSpeechRecognizer? = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask? // Gives results as speech is decteced - active recognition
-    
+
     // Apple's on-device recognition stops after ~60s, restart transcription every 50s to refresh
     private var restartTimer: Timer?
     private let restartInterval: TimeInterval = 50.0
-    
+
     // Each 50s segment's text gets saved here so nothing is lost during restart
     private var completedText = ""
+
+    // Fallback audio engine for when capture session has no audio (e.g. phone call)
+    private var audioEngine: AVAudioEngine?
+    private var usingAudioEngine = false
     
     // Recreate the recognizer with a new locale (call before recording starts)
     func setLocale(_ identifier: String) {
@@ -38,19 +43,69 @@ class TranscriptionService: ObservableObject {
         }
     }
     
-    func startTranscribing() {
+    /// Start transcribing. If `useAudioEngine` is true, taps the mic directly via AVAudioEngine
+    /// instead of waiting for capture session audio buffers (used during phone calls).
+    func startTranscribing(useAudioEngine: Bool = false) {
         guard let recognizer, recognizer.isAvailable else {
             print("Speech recognizer not available")
             return
         }
+
+        usingAudioEngine = useAudioEngine
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         recognitionRequest?.requiresOnDeviceRecognition = true // Force on-device transcription
         recognitionRequest?.shouldReportPartialResults = true // Get results as words are spoken, not when finished
         recognitionRequest?.addsPunctuation = true // Auto-add punctuation
 
+        if useAudioEngine {
+            startAudioEngine()
+        }
+
         startRecognitionTask() // Start listening for speech
         startRestartTimer() // Start the 50s restart cycle
+    }
+
+    /// Tap the mic directly via AVAudioEngine (fallback when capture session has no audio)
+    private func startAudioEngine() {
+        // Configure audio session for recording before accessing the input node
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Audio engine: failed to configure audio session: \(error)")
+            return
+        }
+
+        let engine = AVAudioEngine()
+        let inputNode = engine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+
+        // Validate format — during a phone call the input may report 0 Hz / 0 channels
+        guard recordingFormat.sampleRate > 0, recordingFormat.channelCount > 0 else {
+            print("Audio engine: mic unavailable (format: \(recordingFormat)) — transcription will not work during this call")
+            return
+        }
+
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+            self?.recognitionRequest?.append(buffer)
+        }
+
+        do {
+            engine.prepare()
+            try engine.start()
+            audioEngine = engine
+            print("Audio engine started for transcription (fallback mode)")
+        } catch {
+            print("Failed to start audio engine: \(error)")
+        }
+    }
+
+    private func stopAudioEngine() {
+        audioEngine?.inputNode.removeTap(onBus: 0)
+        audioEngine?.stop()
+        audioEngine = nil
     }
     
     // Called from CameraService every time a new audio sample arrives
@@ -108,6 +163,10 @@ class TranscriptionService: ObservableObject {
         // Kill restart timer
         restartTimer?.invalidate()
         restartTimer = nil
+
+        // Stop audio engine if it was used
+        stopAudioEngine()
+        usingAudioEngine = false
 
         // Stop recognition task
         recognitionTask?.cancel()
@@ -174,19 +233,29 @@ class TranscriptionService: ObservableObject {
         if !currentText.isEmpty {
             completedText += " " + currentText
         }
-        
+
         recognitionTask?.cancel()
         recognitionTask = nil
         recognitionRequest?.endAudio()
-        
+
+        // Stop audio engine tap before creating new request
+        if usingAudioEngine {
+            stopAudioEngine()
+        }
+
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         recognitionRequest?.requiresOnDeviceRecognition = true
         recognitionRequest?.shouldReportPartialResults = true
-        
+
+        // Restart audio engine tap with the new request
+        if usingAudioEngine {
+            startAudioEngine()
+        }
+
         DispatchQueue.main.async {
             self.liveTranscript = ""
         }
-        
+
         startRecognitionTask()
     }
 }

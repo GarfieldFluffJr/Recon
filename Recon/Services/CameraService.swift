@@ -13,6 +13,7 @@ class CameraService: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var isReady = false
     @Published var recordingTime: TimeInterval = 0
+    @Published var audioAvailable = true
     private var isConfigured = false
 
     // Dual camera session (upgraded from AVCaptureSession)
@@ -228,6 +229,10 @@ class CameraService: NSObject, ObservableObject {
         session.commitConfiguration()
         print("Configuration committed (audio: \(hasAudioAttached)), starting session...")
 
+        DispatchQueue.main.async {
+            self.audioAvailable = self.hasAudioAttached
+        }
+
         // Start GPS
         locationService.startUpdating()
 
@@ -272,20 +277,12 @@ class CameraService: NSObject, ObservableObject {
         }
     }
 
-    /// Resume the capture session when returning to the camera tab
+    /// Resume the capture session when returning to the camera tab.
+    /// Always rebuilds with audio to recover from phone calls or other interruptions.
     func resumeSession() {
         DispatchQueue.global(qos: .userInitiated).async {
-            guard !self.session.isRunning else { return }
-            // Reconfigure audio session for capture
-            do {
-                let audioSession = AVAudioSession.sharedInstance()
-                try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
-                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            } catch {
-                print("Failed to reactivate audio session: \(error)")
-            }
-            self.session.startRunning()
-            print("Session resumed")
+            self.configureAndStartSession(withAudio: true)
+            print("Session resumed with audio")
         }
     }
 
@@ -303,7 +300,7 @@ class CameraService: NSObject, ObservableObject {
 
         DispatchQueue.main.async {
             self.isRecording = true
-            self.transcriptionService.startTranscribing()
+            self.transcriptionService.startTranscribing(useAudioEngine: !self.hasAudioAttached)
             self.recordingTime = 0
             self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                 self.recordingTime += 1
