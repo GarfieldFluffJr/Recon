@@ -13,6 +13,7 @@ import CoreLocation
 struct RecordingView: View {
     @ObservedObject var camera: CameraService
     @ObservedObject var analysisVM: AnalysisViewModel
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
     @State private var showAnalysis = false
     var switchToReports: (UUID?) -> Void = { _ in }
 
@@ -103,7 +104,8 @@ struct RecordingView: View {
                     transcript: transcript,
                     latitude: latitude,
                     longitude: longitude,
-                    duration: duration
+                    duration: duration,
+                    language: selectedLanguage
                 )
             }
         }

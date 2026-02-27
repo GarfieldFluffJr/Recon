@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var openReportID: UUID? = nil
     @StateObject private var camera = CameraService()
     @StateObject private var analysisVM = AnalysisViewModel()
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -24,7 +25,7 @@ struct ContentView: View {
                 }
             )
                 .tabItem {
-                    Label("Record", systemImage: "video.fill")
+                    Label(AppStrings.get("tab.record", selectedLanguage), systemImage: "video.fill")
                 }
                 .tag(0)
 
@@ -38,19 +39,19 @@ struct ContentView: View {
                 }
             )
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label(AppStrings.get("tab.home", selectedLanguage), systemImage: "house.fill")
                 }
                 .tag(1)
 
             ReportListView(openReportID: openReportID)
                 .tabItem {
-                    Label("Reports", systemImage: "doc.text.fill")
+                    Label(AppStrings.get("tab.reports", selectedLanguage), systemImage: "doc.text.fill")
                 }
                 .tag(2)
 
             ProfileView()
                 .tabItem {
-                    Label("Profile", systemImage: "person.fill")
+                    Label(AppStrings.get("tab.profile", selectedLanguage), systemImage: "person.fill")
                 }
                 .tag(3)
         }

@@ -27,12 +27,14 @@ struct ProfileView: View {
     @AppStorage("contact_email") private var contactEmail = ""
     @AppStorage("contact_phone") private var contactPhone = ""
 
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("Profile")
+                        Text(AppStrings.get("profile.title", selectedLanguage))
                             .font(.largeTitle)
                             .bold()
                         Spacer()
@@ -41,7 +43,7 @@ struct ProfileView: View {
                     .padding(.top, 60)
 
                     HStack {
-                        (Text("Provide supplementary information to your reports. Complete the fields you consent on sharing.\nAll fields are ") + Text("optional").bold() + Text("."))
+                        (Text(AppStrings.get("profile.desc", selectedLanguage)) + Text(AppStrings.get("profile.optional", selectedLanguage)).bold() + Text("."))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -50,25 +52,25 @@ struct ProfileView: View {
                     .padding(.top, -10)
 
                     // Personal Information
-                    sectionHeader("Personal Information")
+                    sectionHeader(AppStrings.get("profile.personal", selectedLanguage))
 
-                    profileField("Full Name", text: $fullName)
-                    profileField("Age", text: $age, keyboard: .numberPad)
-                    profileField("Email", text: $email, keyboard: .emailAddress)
-                    profileField("Phone Number", text: $phone, keyboard: .phonePad)
-                    profileField("Address", text: $address)
-                    profileField("Postal Code", text: $postalCode)
-                    profileField("City", text: $city)
-                    profileField("State / Province", text: $state)
-                    profileField("Country", text: $country)
+                    profileField(AppStrings.get("profile.fullName", selectedLanguage), text: $fullName)
+                    profileField(AppStrings.get("profile.age", selectedLanguage), text: $age, keyboard: .numberPad)
+                    profileField(AppStrings.get("profile.email", selectedLanguage), text: $email, keyboard: .emailAddress)
+                    profileField(AppStrings.get("profile.phone", selectedLanguage), text: $phone, keyboard: .phonePad)
+                    profileField(AppStrings.get("profile.address", selectedLanguage), text: $address)
+                    profileField(AppStrings.get("profile.postal", selectedLanguage), text: $postalCode)
+                    profileField(AppStrings.get("profile.city", selectedLanguage), text: $city)
+                    profileField(AppStrings.get("profile.state", selectedLanguage), text: $state)
+                    profileField(AppStrings.get("profile.country", selectedLanguage), text: $country)
 
                     // Trusted Contact
-                    sectionHeader("Trusted Contact")
+                    sectionHeader(AppStrings.get("profile.trusted", selectedLanguage))
 
-                    profileField("Full Name", text: $contactName)
-                    profileField("Relationship", text: $contactRelationship)
-                    profileField("Email", text: $contactEmail, keyboard: .emailAddress)
-                    profileField("Phone Number", text: $contactPhone, keyboard: .phonePad)
+                    profileField(AppStrings.get("profile.fullName", selectedLanguage), text: $contactName)
+                    profileField(AppStrings.get("profile.relationship", selectedLanguage), text: $contactRelationship)
+                    profileField(AppStrings.get("profile.email", selectedLanguage), text: $contactEmail, keyboard: .emailAddress)
+                    profileField(AppStrings.get("profile.phone", selectedLanguage), text: $contactPhone, keyboard: .phonePad)
 
                     Spacer().frame(height: 40)
                 }

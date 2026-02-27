@@ -17,7 +17,7 @@ struct HomeView: View {
     var switchToReports: (UUID?) -> Void = { _ in }
 
     @State private var showAnalysis = false
-    @State private var selectedLanguage = "en-US"
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
 
     private let supportedLanguages: [(name: String, code: String, flag: String)] = [
         ("English (US)", "en-US", "\u{1F1FA}\u{1F1F8}"),
@@ -89,7 +89,7 @@ struct HomeView: View {
                     .padding(.top, 60)
 
                     HStack {
-                        Text("Emergency Video Recording")
+                        Text(AppStrings.get("home.subtitle", selectedLanguage))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -104,7 +104,7 @@ struct HomeView: View {
 
                     // Status text
                     VStack(spacing: 6) {
-                        Text(camera.isRecording ? "Recording in progress" : "Ready to record")
+                        Text(camera.isRecording ? AppStrings.get("home.recording", selectedLanguage) : AppStrings.get("home.ready", selectedLanguage))
                             .font(.system(size: 16, weight: .medium))
 
                         if camera.isRecording {
@@ -164,8 +164,8 @@ struct HomeView: View {
 
                     // Helper text
                     Text(camera.isRecording
-                        ? "Recording will be sent to emergency services after report analysis"
-                        : "Tap the button to start recording and send an analysis to emergency services")
+                        ? AppStrings.get("home.helperRecording", selectedLanguage)
+                        : AppStrings.get("home.helperReady", selectedLanguage))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -182,11 +182,11 @@ struct HomeView: View {
                             Circle()
                                 .fill(camera.locationService.location != nil ? Color.green : Color.red)
                                 .frame(width: 8, height: 8)
-                            Text(camera.locationService.location != nil ? "Connected" : "Not Connected")
+                            Text(camera.locationService.location != nil ? AppStrings.get("home.connected", selectedLanguage) : AppStrings.get("home.notConnected", selectedLanguage))
                                 .font(.system(size: 14, weight: .medium))
                         }
                         Spacer()
-                        Text(camera.locationService.location != nil ? "GPS Active" : "GPS Inactive")
+                        Text(camera.locationService.location != nil ? AppStrings.get("home.gpsActive", selectedLanguage) : AppStrings.get("home.gpsInactive", selectedLanguage))
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(camera.locationService.location != nil ? .green : .red)
                     }

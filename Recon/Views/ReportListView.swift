@@ -12,6 +12,7 @@ import SwiftUI
 struct ReportListView: View {
     @State private var reports: [IncidentReport] = []
     @State private var navigationPath = NavigationPath()
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
     private let storageService = ReportStorageService()
     var openReportID: UUID? = nil
 
@@ -23,10 +24,10 @@ struct ReportListView: View {
                         Image(systemName: "doc.text.magnifyingglass")
                             .font(.system(size: 48))
                             .foregroundColor(.gray)
-                        Text("No reports yet")
+                        Text(AppStrings.get("reportList.empty", selectedLanguage))
                             .font(.headline)
                             .foregroundColor(.gray)
-                        Text("Record a video and analyze it to create a report")
+                        Text(AppStrings.get("reportList.emptyDesc", selectedLanguage))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -48,7 +49,7 @@ struct ReportListView: View {
                     }
                 }
             }
-            .navigationTitle("Reports")
+            .navigationTitle(AppStrings.get("tab.reports", selectedLanguage))
             .navigationDestination(for: UUID.self) { reportID in
                 if let report = reports.first(where: { $0.id == reportID }) {
                     ReportDetailView(report: report, onDelete: {
@@ -70,7 +71,7 @@ struct ReportListView: View {
     private func reportRow(_ report: IncidentReport) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Category: \(report.incidentType)")
+                Text("\(AppStrings.get("reportList.category", selectedLanguage)): \(report.incidentType)")
                     .font(.headline)
                 if let timestamp = report.timestamp {
                     Text(formatTimestamp(timestamp))
