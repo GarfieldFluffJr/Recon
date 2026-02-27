@@ -38,7 +38,7 @@ class APIService {
     }
     
     // Call analyze with video key + transcript + GPS
-    func analyzeVideo(videoKey: String, transcript: String, latitude: Double, longitude: Double, duration: Double) async throws -> IncidentReport {
+    func analyzeVideo(videoKey: String, transcript: String, latitude: Double, longitude: Double, duration: Double, language: String = "en-US") async throws -> IncidentReport {
         let url = URL(string: APIConfig.analyzeURL)!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -49,7 +49,8 @@ class APIService {
             "videoKey": videoKey,
             "transcript": transcript,
             "gps": ["latitude": latitude, "longitude": longitude],
-            "duration": duration
+            "duration": duration,
+            "language": language
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         

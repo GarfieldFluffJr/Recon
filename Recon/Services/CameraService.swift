@@ -193,6 +193,10 @@ class CameraService: NSObject, ObservableObject {
         }
     }
 
+    func setTranscriptionLanguage(_ identifier: String) {
+        transcriptionService.setLocale(identifier)
+    }
+
     func startRecording() {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fileName = "\(Date().timeIntervalSince1970).mov"

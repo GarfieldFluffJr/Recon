@@ -17,12 +17,35 @@ struct HomeView: View {
     var switchToReports: (UUID?) -> Void = { _ in }
 
     @State private var showAnalysis = false
+    @State private var selectedLanguage = "en-US"
+
+    private let supportedLanguages: [(name: String, code: String)] = [
+        ("English (US)", "en-US"),
+        ("English (UK)", "en-GB"),
+        ("Spanish", "es-ES"),
+        ("French", "fr-FR"),
+        ("German", "de-DE"),
+        ("Chinese (Mandarin)", "zh-CN"),
+        ("Japanese", "ja-JP"),
+        ("Korean", "ko-KR"),
+        ("Portuguese", "pt-BR"),
+        ("Arabic", "ar-SA"),
+        ("Hindi", "hi-IN"),
+        ("Italian", "it-IT"),
+        ("Russian", "ru-RU"),
+    ]
+
+    /// Short display code for the currently selected language (e.g. "EN", "ES")
+    private var languageDisplayCode: String {
+        let code = selectedLanguage.prefix(2).uppercased()
+        return code
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 VStack {
-                    // Header — icon + title, top left
+                    // Header — icon + title, top left; language picker top right
                     HStack {
                         Image("Recon Icon Square Small")
                             .resizable()
@@ -35,6 +58,34 @@ struct HomeView: View {
                             .bold()
 
                         Spacer()
+
+                        // Language selector dropdown
+                        Menu {
+                            ForEach(supportedLanguages, id: \.code) { lang in
+                                Button {
+                                    selectedLanguage = lang.code
+                                } label: {
+                                    HStack {
+                                        Text(lang.name)
+                                        if lang.code == selectedLanguage {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "globe")
+                                Text(languageDisplayCode)
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                        .disabled(camera.isRecording)
+                        .opacity(camera.isRecording ? 0.4 : 1.0)
                     }
                     .padding(.horizontal)
                     .padding(.top, 60)
@@ -166,6 +217,9 @@ struct HomeView: View {
                     })
                 }
             }
+            .onChange(of: selectedLanguage) { _, newValue in
+                camera.setTranscriptionLanguage(newValue)
+            }
         }
     }
 
@@ -185,7 +239,8 @@ struct HomeView: View {
                     transcript: transcript,
                     latitude: latitude,
                     longitude: longitude,
-                    duration: duration
+                    duration: duration,
+                    language: selectedLanguage
                 )
             }
         }
