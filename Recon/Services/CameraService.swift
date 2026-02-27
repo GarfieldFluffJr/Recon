@@ -24,6 +24,9 @@ class CameraService: NSObject, ObservableObject {
     let locationService = LocationService()
     let transcriptionService = TranscriptionService()
 
+    // Forward nested ObservableObject changes so SwiftUI picks them up
+    private var cancellables = Set<AnyCancellable>()
+
     // Raw frame outputs (one per camera + one for audio)
     private let backVideoOutput = AVCaptureVideoDataOutput()
     private let frontVideoOutput = AVCaptureVideoDataOutput()
@@ -55,6 +58,12 @@ class CameraService: NSObject, ObservableObject {
         guard !isConfigured else { return }
         isConfigured = true
         print("configure() called")
+
+        // Forward locationService changes so SwiftUI updates the GPS indicator immediately
+        locationService.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
 
         // 1. Camera permission
         AVCaptureDevice.requestAccess(for: .video) { granted in
