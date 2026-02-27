@@ -47,6 +47,12 @@ extension LocationService: CLLocationManagerDelegate {
         // Fires when the user taps Allow/Don't Allow (or if already determined)
         let status = manager.authorizationStatus
         guard status != .notDetermined else { return } // still waiting for user
+
+        // Start getting location as soon as permission is granted
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            locationManager.startUpdatingLocation()
+        }
+
         onPermissionResolved?()
         onPermissionResolved = nil // only fire once
     }
