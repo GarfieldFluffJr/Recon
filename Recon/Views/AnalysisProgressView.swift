@@ -11,6 +11,7 @@ import SwiftUI
 
 struct AnalysisProgressView: View {
     @ObservedObject var viewModel: AnalysisViewModel
+    @AppStorage("selectedLanguage") private var selectedLanguage = "en-US"
     var onDismiss: () -> Void
     var onViewReport: () -> Void
 
@@ -39,7 +40,7 @@ struct AnalysisProgressView: View {
                             .font(.system(size: 48))
                             .foregroundColor(.yellow)
 
-                        Text("Analysis Failed")
+                        Text(AppStrings.get("analysis.failed", selectedLanguage))
                             .font(.headline)
                             .foregroundColor(.white)
 
@@ -49,7 +50,7 @@ struct AnalysisProgressView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
 
-                        Button("Dismiss") {
+                        Button(AppStrings.get("analysis.dismiss", selectedLanguage)) {
                             onDismiss()
                         }
                         .foregroundColor(.white)
@@ -59,14 +60,14 @@ struct AnalysisProgressView: View {
                             .font(.system(size: 48))
                             .foregroundColor(.green)
 
-                        Text("Analysis Complete")
+                        Text(AppStrings.get("analysis.complete", selectedLanguage))
                             .font(.headline)
                             .foregroundColor(.white)
 
                         Button {
                             onViewReport()
                         } label: {
-                            Text("View Report")
+                            Text(AppStrings.get("analysis.viewReport", selectedLanguage))
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 24)

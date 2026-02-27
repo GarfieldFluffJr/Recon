@@ -22,24 +22,24 @@ class AnalysisViewModel: ObservableObject {
     func analyze(videoURL: URL, transcript: String, latitude: Double, longitude: Double, duration: Double, language: String = "en-US") {
         isAnalyzing = true
         error = nil
-        uploadProgress = "Getting upload URL..."
-        
+        uploadProgress = AppStrings.get("analysis.gettingURL", language)
+
         // Launch an async block
         Task {
             do {
                 // Get presigned URL
                 let (uploadURL, videoKey) = try await apiService.getUploadURL()
-                
+
                 // DispatchQueue.main.async for async await code (shift back to synchronous code)
                 await MainActor.run {
-                    uploadProgress = "Uploading video..."
+                    uploadProgress = AppStrings.get("analysis.uploading", language)
                 }
-                
+
                 // Upload video to S3
                 try await apiService.uploadVideo(fileURL: videoURL, uploadURL: uploadURL)
-                
+
                 await MainActor.run {
-                    uploadProgress = "Analyzing with Nova..."
+                    uploadProgress = AppStrings.get("analysis.analyzing", language)
                 }
                 
                 // Analyze with Nova 2 Lite
