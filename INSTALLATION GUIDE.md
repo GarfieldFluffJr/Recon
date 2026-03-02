@@ -13,6 +13,7 @@ For all files installed, try to keep them somewhere you remember so it's easy to
     - [App Store (Recommended)](https://apps.apple.com/us/app/xcode/id497799835?mt=12)
     - [Older versions (Requires Apple ID)](https://developer.apple.com/download/all/?q=xcode) - Open in Incognito tab if it keeps redirecting you back to your account
     - [Which version of Xcode to install?](https://developer.apple.com/support/xcode/)
+    - [All Xcode releases (not official Apple website)](https://xcodereleases.com/)
 
 2. Agree to all Xcode popups and install the iOS simulator (which includes iOS build support on your device)
 
