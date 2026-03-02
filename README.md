@@ -1,6 +1,7 @@
 <div align="center">
-  <img src="./Recon Icon Transparent.png" width="175" style="margin-bottom: 0;">
-  <h1 style="margin-top: 0;">Recon</h1>
+  <img src="./Recon Icon Transparent.png" width="175">
+  
+  # Recon
 
   ![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)
   ![iOS 17.0+](https://img.shields.io/badge/iOS-17.0%2B-000000?logo=apple)
