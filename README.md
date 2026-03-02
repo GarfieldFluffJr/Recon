@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./Recon Icon Transparent.png" width="175">
+  <img src="./Recon Icon Transparent.png" width="175" height="135">
   
   # Recon
 
