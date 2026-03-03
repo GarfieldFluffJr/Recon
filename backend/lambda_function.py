@@ -246,7 +246,7 @@ def build_analysis_prompt(transcript, gps, duration, language="en-US", detected_
     - Prioritize responder-useful details (hazards, injuries, weapons, fire behavior, traffic flow, structural damage, medical distress, escalation indicators).
     - Identify environmental clues (street signs, business names, intersections, landmarks, building numbers).
     - Highlight escalation indicators (smoke thickening, physical violence, worsening medical condition, weapon brandishing, spreading fire).
-    - Provide a thorough, detailed description (4–6 sentences minimum) covering the scene, environment, weather if visible, lighting conditions, people, actions, and hazards.
+    - Provide a thorough, detailed description (4-6 sentences minimum) covering the scene, environment, weather if visible, lighting conditions, people, actions, and hazards.
 
     VIDEO LAYOUT RULE:
     - The video uses a picture-in-picture layout: the main (larger) view is the rear-facing camera, and the small overlay in the top-right corner is the front-facing camera showing the person recording.
