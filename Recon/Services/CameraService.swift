@@ -93,8 +93,10 @@ class CameraService: NSObject, ObservableObject {
 
     /// Check if audio hardware is actually available (returns false during phone calls).
     private var isAudioAvailableNow: Bool {
-        AVCaptureDevice.default(for: .audio) != nil
-            && !AVAudioSession.sharedInstance().isOtherAudioPlaying
+        guard AVCaptureDevice.default(for: .audio) != nil else { return false }
+        let session = AVAudioSession.sharedInstance()
+        // secondaryAudioShouldBeSilencedHint is true during phone/FaceTime calls
+        return !session.secondaryAudioShouldBeSilencedHint
     }
 
     // All the camera pipeline setup, called after permissions are granted
@@ -123,19 +125,17 @@ class CameraService: NSObject, ObservableObject {
             session.stopRunning()
         }
 
-        // Configure audio session — only use .playAndRecord when we need audio capture.
-        // During a phone call, setting .playAndRecord can freeze the capture session.
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            if withAudio {
+        // Only touch AVAudioSession when we actually need audio.
+        // During a phone call, ANY audio session activation can freeze the capture pipeline.
+        if withAudio {
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
-            } else {
-                try audioSession.setCategory(.ambient, options: [.mixWithOthers])
+                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                print("Audio session configured for recording")
+            } catch {
+                print("Failed to configure audio session: \(error)")
             }
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            print("Audio session configured (withAudio: \(withAudio))")
-        } catch {
-            print("Failed to configure audio session: \(error)")
         }
 
         // Clear all existing inputs/outputs/connections
@@ -265,12 +265,35 @@ class CameraService: NSObject, ObservableObject {
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
 
         if type == .began {
-            print("Audio interruption began (phone call) — restarting session without audio")
-            configureAndStartSession(withAudio: false)
+            print("Audio interruption began (phone call) — detaching audio, keeping video alive")
+            detachAudio()
         } else if type == .ended {
-            print("Audio interruption ended — restarting session with audio")
+            print("Audio interruption ended — rebuilding session with audio")
+            // Full rebuild needed to re-add audio input after interruption
             configureAndStartSession(withAudio: true)
         }
+    }
+
+    /// Remove audio input/output from the live session without stopping the cameras.
+    private func detachAudio() {
+        session.beginConfiguration()
+        if let input = audioInput {
+            session.removeInput(input)
+            audioInput = nil
+        }
+        // Remove audio output and its connections
+        for connection in session.connections where connection.output == audioOutput {
+            session.removeConnection(connection)
+        }
+        if session.outputs.contains(audioOutput) {
+            session.removeOutput(audioOutput)
+        }
+        session.commitConfiguration()
+        hasAudioAttached = false
+        DispatchQueue.main.async {
+            self.audioAvailable = false
+        }
+        print("Audio detached — video continues")
     }
 
     /// Pause the capture session and switch audio to playback mode so AVPlayer can work
@@ -295,11 +318,11 @@ class CameraService: NSObject, ObservableObject {
     }
 
     /// Resume the capture session when returning to the camera tab.
-    /// Always rebuilds with audio to recover from phone calls or other interruptions.
     func resumeSession() {
         DispatchQueue.global(qos: .userInitiated).async {
-            self.configureAndStartSession(withAudio: true)
-            print("Session resumed with audio")
+            let useAudio = self.isAudioAvailableNow
+            self.configureAndStartSession(withAudio: useAudio)
+            print("Session resumed (audio: \(useAudio))")
         }
     }
 
@@ -317,7 +340,14 @@ class CameraService: NSObject, ObservableObject {
 
         DispatchQueue.main.async {
             self.isRecording = true
-            self.transcriptionService.startTranscribing(useAudioEngine: !self.hasAudioAttached)
+            // Only attempt transcription if audio is attached (mic available via capture session).
+            // When audio is unavailable (phone call), don't try the audio engine fallback —
+            // the mic is exclusive to the call and attempting .playAndRecord will disrupt recording.
+            if self.hasAudioAttached {
+                self.transcriptionService.startTranscribing(useAudioEngine: false)
+            } else {
+                print("Skipping transcription — no audio available (likely phone call)")
+            }
             self.recordingTime = 0
             self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                 self.recordingTime += 1
