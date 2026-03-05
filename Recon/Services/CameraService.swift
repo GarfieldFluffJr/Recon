@@ -91,9 +91,21 @@ class CameraService: NSObject, ObservableObject {
         }
     }
 
+    /// Check if audio hardware is actually available (returns false during phone calls).
+    private var isAudioAvailableNow: Bool {
+        AVCaptureDevice.default(for: .audio) != nil
+            && !AVAudioSession.sharedInstance().isOtherAudioPlaying
+    }
+
     // All the camera pipeline setup, called after permissions are granted
     private func setupSession() {
-        configureAndStartSession(withAudio: true)
+        // If already on a phone call at launch, skip audio from the start.
+        // Try adding audio; if it fails, configureAndStartSession handles the fallback.
+        let useAudio = isAudioAvailableNow
+        if !useAudio {
+            print("Audio unavailable at launch (likely phone call) — starting without audio")
+        }
+        configureAndStartSession(withAudio: useAudio)
 
         // Listen for audio interruptions (phone calls) — more reliable than AVCaptureSession notifications
         NotificationCenter.default.addObserver(self, selector: #selector(audioSessionInterrupted), name: AVAudioSession.interruptionNotification, object: nil)
@@ -111,12 +123,17 @@ class CameraService: NSObject, ObservableObject {
             session.stopRunning()
         }
 
-        // Configure audio session
+        // Configure audio session — only use .playAndRecord when we need audio capture.
+        // During a phone call, setting .playAndRecord can freeze the capture session.
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
+            if withAudio {
+                try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
+            } else {
+                try audioSession.setCategory(.ambient, options: [.mixWithOthers])
+            }
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            print("Audio session configured")
+            print("Audio session configured (withAudio: \(withAudio))")
         } catch {
             print("Failed to configure audio session: \(error)")
         }
