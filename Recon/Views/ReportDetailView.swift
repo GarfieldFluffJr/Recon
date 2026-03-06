@@ -15,7 +15,7 @@ struct ReportDetailView: View {
     let report: IncidentReport
     var onDelete: (() -> Void)? = nil
     @State private var showFullScreenVideo = false
-    @State private var showUnderConstruction = false
+    @State private var showSendSuccess = false
     @State private var player: AVPlayer?
 
     var body: some View {
@@ -231,7 +231,7 @@ struct ReportDetailView: View {
                 HStack {
                     Spacer()
                     Button {
-                        showUnderConstruction = true
+                        showSendSuccess = true
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "paperplane.fill")
@@ -250,11 +250,40 @@ struct ReportDetailView: View {
             .padding()
         }
         .navigationTitle("Incident Report")
-        .alert("Under Construction", isPresented: $showUnderConstruction) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Sending reports to emergency responders is not yet available.")
+        .overlay {
+            if showSendSuccess {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture { showSendSuccess = false }
+
+                VStack(spacing: 16) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 56))
+                        .foregroundColor(.green)
+                    Text("Report Sent")
+                        .font(.title2)
+                        .bold()
+                    Text("Emergency services have been successfully notified of your incident report.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("OK") { showSendSuccess = false }
+                        .bold()
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.top, 4)
+                }
+                .padding(24)
+                .frame(maxWidth: 300)
+                .background(.regularMaterial)
+                .cornerRadius(16)
+                .shadow(radius: 20)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: showSendSuccess)
         .toolbar {
             if let onDelete = onDelete {
                 ToolbarItem(placement: .destructiveAction) {
