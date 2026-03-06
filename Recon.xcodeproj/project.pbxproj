@@ -8,7 +8,6 @@
 
 /* Begin PBXFileReference section */
 		DEF70FCB2F3BF4BA006E7E05 /* Recon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Recon.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E7FE276E2E304ABABB00B0DA /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -24,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A093430E293A4819B34485F6 /* AppStrings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,14 +43,6 @@
 				DEF70FCB2F3BF4BA006E7E05 /* Recon.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		FCC19761AE9B4FAD951C57EE /* Localization */ = {
-			isa = PBXGroup;
-			children = (
-				E7FE276E2E304ABABB00B0DA /* AppStrings.swift */,
-			);
-			path = Localization;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -281,7 +271,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.louieyin.Recon;
+				PRODUCT_BUNDLE_IDENTIFIER = com.louieyin.ReconProject;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -318,7 +308,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.louieyin.Recon;
+				PRODUCT_BUNDLE_IDENTIFIER = com.louieyin.ReconProject;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
