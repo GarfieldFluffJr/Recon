@@ -16,6 +16,7 @@ struct ReportDetailView: View {
     var onDelete: (() -> Void)? = nil
     @State private var showFullScreenVideo = false
     @State private var showSendSuccess = false
+    @State private var showShareSheet = false
     @State private var player: AVPlayer?
 
     var body: some View {
@@ -285,6 +286,15 @@ struct ReportDetailView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: showSendSuccess)
         .toolbar {
+            if let videoURL = report.localVideoURL {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showShareSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
             if let onDelete = onDelete {
                 ToolbarItem(placement: .destructiveAction) {
                     Button(role: .destructive) {
@@ -295,6 +305,11 @@ struct ReportDetailView: View {
                             .foregroundColor(.red)
                     }
                 }
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let videoURL = report.localVideoURL {
+                ShareSheet(items: [videoURL])
             }
         }
     }
@@ -374,4 +389,14 @@ struct FullScreenVideoView: View {
             .padding(.leading, 20)
         }
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
