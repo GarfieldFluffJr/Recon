@@ -10,7 +10,7 @@
 
   For installation -- **<a href="./INSTALLATION GUIDE.md">INSTALLATION GUIDE.md</a>**
 
-  Devpost -- **[https://devpost.com/software/recon-ambnp1](https://devpost.com/software/recon-ambnp1)**
+  <!-- Devpost -- **[https://devpost.com/software/recon-ambnp1](https://devpost.com/software/recon-ambnp1)** -->
 
   Video Demo -- **[https://www.youtube.com/watch?v=PKwWFbcJCJs](https://www.youtube.com/watch?v=PKwWFbcJCJs)**
 </div>
